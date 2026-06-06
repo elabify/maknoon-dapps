@@ -18,17 +18,21 @@ const ONE_YEAR = 365 * 24 * 60 * 60;
 
 // Networks (the coin/chain family) and their chains (sub-networks).
 // rawValues match the native enums.
+// Listed alphabetically by label.
 const FAMILIES = [
+  { chain: "bitcoin", label: "Bitcoin", chains: [
+    { network: "mainnet",  label: "Mainnet", ticker: "BTC" },
+    { network: "testnet3", label: "Testnet", ticker: "tBTC" },
+  ]},
+  { chain: "lightning", label: "Bitcoin Lightning", chains: [
+    { network: "lightning", label: "Lightning", ticker: "sats" },
+  ]},
   { chain: "ethereum", label: "Ethereum", chains: [
     { network: "sepolia",  label: "Sepolia",      ticker: "ETH" },
     { network: "mainnet",  label: "Mainnet",      ticker: "ETH" },
     { network: "base",     label: "Base",         ticker: "ETH" },
     { network: "arbitrum", label: "Arbitrum One", ticker: "ETH" },
     { network: "polygon",  label: "Polygon",      ticker: "POL" },
-  ]},
-  { chain: "bitcoin", label: "Bitcoin", chains: [
-    { network: "mainnet",  label: "Mainnet", ticker: "BTC" },
-    { network: "testnet3", label: "Testnet", ticker: "tBTC" },
   ]},
   { chain: "solana", label: "Solana", chains: [
     { network: "mainnet", label: "Mainnet", ticker: "SOL" },
@@ -37,9 +41,6 @@ const FAMILIES = [
   { chain: "tron", label: "Tron", chains: [
     { network: "mainnet", label: "Mainnet", ticker: "TRX" },
     { network: "nile",    label: "Nile",    ticker: "TRX" },
-  ]},
-  { chain: "lightning", label: "Bitcoin Lightning", chains: [
-    { network: "lightning", label: "Lightning", ticker: "sats" },
   ]},
 ];
 
@@ -148,10 +149,11 @@ function fmt(n, dp) { return (n || 0).toLocaleString(undefined, { maximumFractio
 
 function renderAmount() {
   const a = amounts();
-  const cryptoDp = isLightning() ? 0 : 8;
   $("#unit").textContent = state.inputIsFiat ? fiatSymbol(state.fiatCode) : "";
   $("#amountLabel").textContent = state.inputIsFiat ? `Amount (${state.fiatCode})` : `Amount (${net().ticker})`;
-  $("#amount").textContent = state.inputIsFiat ? fmt(a.fiat, 2) : fmt(a.crypto, cryptoDp);
+  // Show exactly what's being typed (so "0.005" shows the dot + zeros live);
+  // the parsed value drives the equivalent + charge logic below.
+  $("#amount").textContent = state.digits;
 
   let equiv;
   if (state.rate == null) {
@@ -163,8 +165,8 @@ function renderAmount() {
   }
   $("#equivalent").textContent = equiv;
   $("#flipBtn").style.visibility = (state.rate == null) ? "hidden" : "visible";
-  // Lightning needs no receiving address (uses the active Lightning account).
-  $("#chargeBtn").disabled = !(a.crypto > 0) || (!state.address && !isLightning());
+  // A receiving wallet is required (for Lightning, the chosen account).
+  $("#chargeBtn").disabled = !(a.crypto > 0) || !state.address;
   $("#netChip").textContent = net().label;
   renderReceiveLine();
 }
@@ -172,12 +174,14 @@ function renderAmount() {
 function renderReceiveLine() {
   const el = $("#receiveLine");
   if (!el) return;
+  if (!state.address) {
+    el.textContent = `No ${esc(fam().label)} wallet — set one up in Maknoon first.`;
+    return;
+  }
   if (isLightning()) {
-    el.innerHTML = `Receiving on <b>Bitcoin Lightning</b> → your active Lightning wallet`;
-  } else if (state.address) {
-    el.innerHTML = `Receiving on ${esc(net().label)} → <b>${esc(state.addressName || "wallet")}</b> <span class="addr">${esc(short(state.address))}</span>`;
+    el.innerHTML = `Receiving on <b>Bitcoin Lightning</b> → <b>${esc(state.addressName || "Lightning wallet")}</b>`;
   } else {
-    el.textContent = `No ${net().chain} wallet selected — open settings`;
+    el.innerHTML = `Receiving on ${esc(net().label)} → <b>${esc(state.addressName || "wallet")}</b> <span class="addr">${esc(short(state.address))}</span>`;
   }
 }
 
@@ -280,7 +284,7 @@ async function runCharge() {
   let pay;
   try {
     pay = await window.maknoon.payment.receive(isLightning() ? {
-      chain: "lightning", amount: String(a.crypto), fiatText: fiatText || undefined,
+      chain: "lightning", account: state.address, amount: String(a.crypto), fiatText: fiatText || undefined,
     } : {
       chain: net().chain, network: net().network, address: state.address,
       amount: trimFloat(a.crypto), fiatText: fiatText || undefined,
@@ -376,24 +380,31 @@ async function openSettings() {
 async function populateAddresses() {
   const sel = $("#addressSelect");
   // Lightning receives into the active Lightning account; no address to pick.
-  if (isLightning()) {
-    sel.innerHTML = `<option value="">Active Lightning account</option>`;
-    $("#addressHint").textContent = "Lightning uses your active Lightning account in Maknoon.";
+  // Build a uniform list of {address, name, isOwnWallet} for the chain.
+  // Lightning lists the user's Lightning accounts (address = account id);
+  // on-chain lists address-book entries (own wallets + contacts).
+  let list = [];
+  try {
+    if (isLightning()) {
+      const accts = await window.maknoon.payment.lightningAccounts();
+      list = (accts || []).map((a) => ({ address: a.id, name: a.label, isOwnWallet: true }));
+    } else {
+      list = (await window.maknoon.addressBook.list({ chain: net().chain })) || [];
+    }
+  } catch (e) { list = []; }
+
+  if (!list.length) {
+    sel.innerHTML = `<option value="">No ${esc(fam().label)} wallet</option>`;
+    $("#addressHint").textContent = `Set up a ${fam().label} wallet in Maknoon first, then reopen.`;
     state.address = null; state.addressName = null;
     renderReceiveLine();
     return;
   }
-  let list = [];
-  try { list = await window.maknoon.addressBook.list({ chain: net().chain }); } catch (e) {}
-  if (!list || !list.length) {
-    sel.innerHTML = `<option value="">No ${net().chain} address found</option>`;
-    $("#addressHint").textContent = `Add a ${net().chain} wallet or contact in Maknoon, then reopen.`;
-    state.address = null;
-    return;
-  }
-  sel.innerHTML = list.map((e) =>
-    `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet ? " (my wallet)" : ""} — ${short(e.address)}</option>`
-  ).join("");
+
+  sel.innerHTML = list.map((e) => {
+    const suffix = isLightning() ? "" : ` — ${short(e.address)}`;
+    return `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet && !isLightning() ? " (my wallet)" : ""}${suffix}</option>`;
+  }).join("");
   if (!state.address || !list.some((e) => e.address === state.address)) {
     state.address = list[0].address;
     state.addressName = list[0].name;
@@ -402,7 +413,9 @@ async function populateAddresses() {
     const cur = list.find((e) => e.address === state.address);
     if (cur) state.addressName = cur.name;
   }
-  $("#addressHint").textContent = "Pick one of your wallets or saved addresses.";
+  $("#addressHint").textContent = isLightning()
+    ? "Pick which Lightning wallet receives."
+    : "Pick one of your wallets or saved addresses.";
   renderReceiveLine();
 }
 
