@@ -4,15 +4,15 @@
   "files": [
     {
       "path": "app.js",
-      "sha256": "8bb3a7244333bd66bfd2614e9a768b839d3f9bd3f0877a31c8084bf5eb2b3130"
+      "sha256": "618f5c2416859d464751e0187b07f68e438c7c07178104a0f5b82c436290fb03"
     },
     {
       "path": "index.html",
-      "sha256": "7e488260b008c7164072c27e04430dc95c7da1131deca05bea301be5692a63a5"
+      "sha256": "ff782caeba9dcceb273e2d937b9fae694558cefbca0227ea49237d5878e3d697"
     },
     {
       "path": "styles.css",
-      "sha256": "dddf96a15799e015c6efaa21d8901abf3862ead40c52502f03c99c65e81d887f"
+      "sha256": "6108658fbdaba8497993e19e1f51fa06b48f3907f3fc6bebe311ba675d506ae0"
     }
   ]
 }

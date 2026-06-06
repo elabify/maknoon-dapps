@@ -132,3 +132,11 @@ body {
 .tx-meta { color: var(--muted); font-size: 12px; margin-top: 4px; display: flex; justify-content: space-between; gap: 8px; }
 .tx-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(52,211,153,.15); color: var(--green); white-space: nowrap; }
 .tx-empty { color: var(--muted); font-size: 14px; text-align: center; padding: 24px 0; }
+
+.receive-line {
+  text-align: center; font-size: 13px; color: var(--muted);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 9px 12px;
+}
+.receive-line b { color: var(--text); font-weight: 600; }
+.receive-line .addr { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--accent); }

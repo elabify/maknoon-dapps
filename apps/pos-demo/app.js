@@ -16,19 +16,28 @@ const SANCTIONS_SCHEMA = "elabify://schema/global/musnadMaknoon/v1";
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
-// Curated networks (rawValues match the native enums).
-const NETWORKS = [
-  { chain: "ethereum", network: "sepolia",  label: "Ethereum Sepolia", ticker: "ETH" },
-  { chain: "ethereum", network: "mainnet",  label: "Ethereum",         ticker: "ETH" },
-  { chain: "ethereum", network: "base",     label: "Base",             ticker: "ETH" },
-  { chain: "ethereum", network: "arbitrum", label: "Arbitrum One",     ticker: "ETH" },
-  { chain: "ethereum", network: "polygon",  label: "Polygon",          ticker: "POL" },
-  { chain: "bitcoin",  network: "mainnet",  label: "Bitcoin",          ticker: "BTC" },
-  { chain: "bitcoin",  network: "testnet3", label: "Bitcoin Testnet",  ticker: "tBTC" },
-  { chain: "solana",   network: "mainnet",  label: "Solana",           ticker: "SOL" },
-  { chain: "solana",   network: "devnet",   label: "Solana Devnet",    ticker: "SOL" },
-  { chain: "tron",     network: "mainnet",  label: "Tron",             ticker: "TRX" },
-  { chain: "tron",     network: "nile",     label: "Tron Nile",        ticker: "TRX" },
+// Networks (the coin/chain family) and their chains (sub-networks).
+// rawValues match the native enums.
+const FAMILIES = [
+  { chain: "ethereum", label: "Ethereum", chains: [
+    { network: "sepolia",  label: "Sepolia",      ticker: "ETH" },
+    { network: "mainnet",  label: "Mainnet",      ticker: "ETH" },
+    { network: "base",     label: "Base",         ticker: "ETH" },
+    { network: "arbitrum", label: "Arbitrum One", ticker: "ETH" },
+    { network: "polygon",  label: "Polygon",      ticker: "POL" },
+  ]},
+  { chain: "bitcoin", label: "Bitcoin", chains: [
+    { network: "mainnet",  label: "Mainnet", ticker: "BTC" },
+    { network: "testnet3", label: "Testnet", ticker: "tBTC" },
+  ]},
+  { chain: "solana", label: "Solana", chains: [
+    { network: "mainnet", label: "Mainnet", ticker: "SOL" },
+    { network: "devnet",  label: "Devnet",  ticker: "SOL" },
+  ]},
+  { chain: "tron", label: "Tron", chains: [
+    { network: "mainnet", label: "Mainnet", ticker: "TRX" },
+    { network: "nile",    label: "Nile",    ticker: "TRX" },
+  ]},
 ];
 
 const $ = (s) => document.querySelector(s);
@@ -37,15 +46,23 @@ const has = () => !!(window.maknoon);
 const state = {
   digits: "0",          // raw entry string
   inputIsFiat: true,    // fiat-first by default
-  netIndex: 0,
+  famIndex: 0,          // selected network family
+  chainIndex: 0,        // selected chain within the family
   address: null,
+  addressName: null,
   capture: "sanctions", // or "passport"
   passportAttrs: ["givenName", "familyName", "nationality"],
   rate: null,           // fiat per 1 coin (null => no fiat)
   fiatCode: "USD",
 };
 
-function net() { return NETWORKS[state.netIndex]; }
+function fam() { return FAMILIES[state.famIndex]; }
+// Flattened current selection: { chain, network, ticker, label }.
+function net() {
+  const f = fam();
+  const c = f.chains[state.chainIndex] || f.chains[0];
+  return { chain: f.chain, network: c.network, ticker: c.ticker, label: `${f.label} · ${c.label}` };
+}
 
 // --- persistence ----------------------------------------------------------
 async function loadSettings() {
@@ -53,9 +70,14 @@ async function loadSettings() {
     const raw = await window.maknoon.storage.getItem("settings");
     if (raw) {
       const s = JSON.parse(raw);
-      const i = NETWORKS.findIndex((n) => n.chain === s.chain && n.network === s.network);
-      if (i >= 0) state.netIndex = i;
+      const fi = FAMILIES.findIndex((f) => f.chain === s.chain);
+      if (fi >= 0) {
+        state.famIndex = fi;
+        const ci = FAMILIES[fi].chains.findIndex((c) => c.network === s.network);
+        state.chainIndex = ci >= 0 ? ci : 0;
+      }
       state.address = s.address || null;
+      state.addressName = s.addressName || null;
       state.capture = s.capture || "sanctions";
       if (Array.isArray(s.passportAttrs)) state.passportAttrs = s.passportAttrs;
     }
@@ -64,7 +86,8 @@ async function loadSettings() {
 async function saveSettings() {
   const s = {
     chain: net().chain, network: net().network,
-    address: state.address, capture: state.capture, passportAttrs: state.passportAttrs,
+    address: state.address, addressName: state.addressName,
+    capture: state.capture, passportAttrs: state.passportAttrs,
   };
   try { await window.maknoon.storage.setItem("settings", JSON.stringify(s)); } catch (e) {}
 }
@@ -126,6 +149,17 @@ function renderAmount() {
   $("#flipBtn").style.visibility = (state.rate == null) ? "hidden" : "visible";
   $("#chargeBtn").disabled = !(a.crypto > 0) || !state.address;
   $("#netChip").textContent = net().label;
+  renderReceiveLine();
+}
+
+function renderReceiveLine() {
+  const el = $("#receiveLine");
+  if (!el) return;
+  if (state.address) {
+    el.innerHTML = `Receiving on ${esc(net().label)} → <b>${esc(state.addressName || "wallet")}</b> <span class="addr">${esc(short(state.address))}</span>`;
+  } else {
+    el.textContent = `No ${net().chain} wallet selected — open settings`;
+  }
 }
 
 function fiatSymbol(code) {
@@ -275,13 +309,31 @@ $("#saveSettings").addEventListener("click", async () => {
   $("#settingsOverlay").classList.add("hidden");
 });
 $("#networkSelect").addEventListener("change", async (e) => {
-  state.netIndex = parseInt(e.target.value, 10) || 0;
-  state.address = null;
+  state.famIndex = parseInt(e.target.value, 10) || 0;
+  state.chainIndex = 0;
+  state.address = null; state.addressName = null;
+  populateChains();
   await populateAddresses();
   await refreshRate();
   await saveSettings();
 });
-$("#addressSelect").addEventListener("change", (e) => { state.address = e.target.value || null; renderAmount(); });
+$("#chainSelect").addEventListener("change", async (e) => {
+  state.chainIndex = parseInt(e.target.value, 10) || 0;
+  await refreshRate();          // ticker/rate can differ per chain (e.g. POL)
+  await saveSettings();
+});
+$("#addressSelect").addEventListener("change", (e) => {
+  state.address = e.target.value || null;
+  const opt = e.target.selectedOptions[0];
+  state.addressName = opt ? opt.dataset.name : null;
+  renderAmount(); saveSettings();
+});
+
+function populateChains() {
+  const sel = $("#chainSelect");
+  sel.innerHTML = fam().chains.map((c, i) =>
+    `<option value="${i}" ${i === state.chainIndex ? "selected" : ""}>${c.label} (${c.ticker})</option>`).join("");
+}
 document.querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => {
   state.capture = b.dataset.capture;
   syncCaptureUI();
@@ -291,9 +343,9 @@ $("#passportAttrs").addEventListener("change", () => {
 });
 
 async function openSettings() {
-  // network select
   const ns = $("#networkSelect");
-  ns.innerHTML = NETWORKS.map((n, i) => `<option value="${i}" ${i === state.netIndex ? "selected" : ""}>${n.label}</option>`).join("");
+  ns.innerHTML = FAMILIES.map((f, i) => `<option value="${i}" ${i === state.famIndex ? "selected" : ""}>${f.label}</option>`).join("");
+  populateChains();
   await populateAddresses();
   syncCaptureUI();
   $("#settingsOverlay").classList.remove("hidden");
@@ -310,13 +362,18 @@ async function populateAddresses() {
     return;
   }
   sel.innerHTML = list.map((e) =>
-    `<option value="${esc(e.address)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet ? " (my wallet)" : ""} — ${short(e.address)}</option>`
+    `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet ? " (my wallet)" : ""} — ${short(e.address)}</option>`
   ).join("");
   if (!state.address || !list.some((e) => e.address === state.address)) {
     state.address = list[0].address;
+    state.addressName = list[0].name;
     sel.value = state.address;
+  } else {
+    const cur = list.find((e) => e.address === state.address);
+    if (cur) state.addressName = cur.name;
   }
   $("#addressHint").textContent = "Pick one of your wallets or saved addresses.";
+  renderReceiveLine();
 }
 
 function syncCaptureUI() {
