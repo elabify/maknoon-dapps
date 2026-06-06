@@ -21,6 +21,16 @@
       "permissions": [
         "identity",
         "payment"
+      ],
+      "capabilities": [
+        {
+          "name": "identity",
+          "reason": "Verify each customer holds a sanctions-clean credential"
+        },
+        {
+          "name": "payment",
+          "reason": "Receive payments and pick a receiving address"
+        }
       ]
     }
   ]

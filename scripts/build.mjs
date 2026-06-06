@@ -26,7 +26,13 @@ const CATALOG_PATH = join(ROOT, "catalog.json");
 // wallets to re-download). `channel` is the release track (beta|stable).
 // `requiresMaknoon` is the minimum Maknoon app version the dApp targets.
 const APP_META = {
-  "pos-demo": { version: "0.1.0", entry: "index.html", channel: "beta", requiresMaknoon: "0.4.1" },
+  "pos-demo": {
+    version: "0.1.0", entry: "index.html", channel: "beta", requiresMaknoon: "0.4.1",
+    capabilities: [
+      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
+      { name: "payment", reason: "Receive payments and pick a receiving address" },
+    ],
+  },
 };
 
 function sha256Hex(buf) {
@@ -73,6 +79,7 @@ for (const appId of readdirSync(APPS_DIR)) {
     entry.version = meta.version;
     if (meta.channel) entry.channel = meta.channel;
     if (meta.requiresMaknoon) entry.requiresMaknoonVersion = meta.requiresMaknoon;
+    if (meta.capabilities) entry.capabilities = meta.capabilities;
     built++;
     console.log(`[build] ${appId}: v${meta.version} ${meta.channel || ""} ${files.length} files, manifest ${manifestSha.slice(0, 12)}…`);
   } else {
