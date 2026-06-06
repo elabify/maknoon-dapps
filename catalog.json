@@ -1,0 +1,27 @@
+{
+  "id": "elabify.maknoon-dapps",
+  "name": "Maknoon dApps",
+  "curator": "Elabify",
+  "summary": "Reference mini apps for the Maknoon wallet. Each app is an HTML/CSS/JS bundle the wallet downloads, integrity-checks, and runs in a sandbox.",
+  "url": "https://elabify.github.io/maknoon-dapps/catalog.json",
+  "apps": [
+    {
+      "id": "pos-demo",
+      "title": "Point of Sale",
+      "summary": "Verify a customer (sanctions or passport) then accept payment on any network.",
+      "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, or passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book, auto-detected on-chain. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
+      "iconName": "creditcard.fill",
+      "statusLabel": "Beta",
+      "curatedBy": "Elabify",
+      "version": "0.1.0",
+      "channel": "beta",
+      "requiresMaknoonVersion": "0.4.1",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
+      "manifestSha256": "0fae686dda88708a908ac1ae4a3a5890c269a80ff19a2c9c0bdc49dea14a94b7",
+      "permissions": [
+        "identity",
+        "payment"
+      ]
+    }
+  ]
+}
