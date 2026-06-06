@@ -38,6 +38,9 @@ const FAMILIES = [
     { network: "mainnet", label: "Mainnet", ticker: "TRX" },
     { network: "nile",    label: "Nile",    ticker: "TRX" },
   ]},
+  { chain: "lightning", label: "Bitcoin Lightning", chains: [
+    { network: "lightning", label: "Lightning", ticker: "sats" },
+  ]},
 ];
 
 const $ = (s) => document.querySelector(s);
@@ -57,6 +60,7 @@ const state = {
 };
 
 function fam() { return FAMILIES[state.famIndex]; }
+function isLightning() { return fam().chain === "lightning"; }
 // Flattened current selection: { chain, network, ticker, label }.
 function net() {
   const f = fam();
@@ -118,8 +122,19 @@ async function refreshRate() {
 function enteredNumber() { return parseFloat(state.digits || "0") || 0; }
 
 // Returns { crypto, fiat } numeric amounts for the current entry.
+// For Lightning, `crypto` is in sats (the rate is fiat-per-BTC).
 function amounts() {
   const v = enteredNumber();
+  if (isLightning()) {
+    if (state.inputIsFiat) {
+      const sats = state.rate ? Math.round((v / state.rate) * 1e8) : 0;
+      return { fiat: v, crypto: sats };
+    } else {
+      const sats = Math.round(v);
+      const fiat = state.rate ? (sats / 1e8) * state.rate : null;
+      return { fiat, crypto: sats };
+    }
+  }
   if (state.inputIsFiat) {
     const crypto = state.rate ? v / state.rate : 0;
     return { fiat: v, crypto };
@@ -133,21 +148,23 @@ function fmt(n, dp) { return (n || 0).toLocaleString(undefined, { maximumFractio
 
 function renderAmount() {
   const a = amounts();
+  const cryptoDp = isLightning() ? 0 : 8;
   $("#unit").textContent = state.inputIsFiat ? fiatSymbol(state.fiatCode) : "";
   $("#amountLabel").textContent = state.inputIsFiat ? `Amount (${state.fiatCode})` : `Amount (${net().ticker})`;
-  $("#amount").textContent = state.inputIsFiat ? fmt(a.fiat, 2) : fmt(a.crypto, 8);
+  $("#amount").textContent = state.inputIsFiat ? fmt(a.fiat, 2) : fmt(a.crypto, cryptoDp);
 
   let equiv;
   if (state.rate == null) {
     equiv = "no rate on this network";
   } else if (state.inputIsFiat) {
-    equiv = `≈ ${fmt(a.crypto, 6)} ${net().ticker}`;
+    equiv = `≈ ${fmt(a.crypto, isLightning() ? 0 : 6)} ${net().ticker}`;
   } else {
     equiv = `≈ ${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)}`;
   }
   $("#equivalent").textContent = equiv;
   $("#flipBtn").style.visibility = (state.rate == null) ? "hidden" : "visible";
-  $("#chargeBtn").disabled = !(a.crypto > 0) || !state.address;
+  // Lightning needs no receiving address (uses the active Lightning account).
+  $("#chargeBtn").disabled = !(a.crypto > 0) || (!state.address && !isLightning());
   $("#netChip").textContent = net().label;
   renderReceiveLine();
 }
@@ -155,7 +172,9 @@ function renderAmount() {
 function renderReceiveLine() {
   const el = $("#receiveLine");
   if (!el) return;
-  if (state.address) {
+  if (isLightning()) {
+    el.innerHTML = `Receiving on <b>Bitcoin Lightning</b> → your active Lightning wallet`;
+  } else if (state.address) {
     el.innerHTML = `Receiving on ${esc(net().label)} → <b>${esc(state.addressName || "wallet")}</b> <span class="addr">${esc(short(state.address))}</span>`;
   } else {
     el.textContent = `No ${net().chain} wallet selected — open settings`;
@@ -174,7 +193,8 @@ function press(k) {
     if (!state.digits.includes(".")) state.digits += state.digits === "0" ? "." : ".";
   } else {
     const dp = state.digits.split(".")[1];
-    const cap = state.inputIsFiat ? 2 : 8;
+    // Fiat = 2 dp; crypto = 8 dp, except Lightning sats are whole numbers.
+    const cap = state.inputIsFiat ? 2 : (isLightning() ? 0 : 8);
     if (dp && dp.length >= cap) return;
     state.digits = (state.digits === "0") ? k : state.digits + k;
   }
@@ -259,7 +279,9 @@ async function runCharge() {
   const fiatText = (a.fiat != null) ? `≈ ${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
   let pay;
   try {
-    pay = await window.maknoon.payment.receive({
+    pay = await window.maknoon.payment.receive(isLightning() ? {
+      chain: "lightning", amount: String(a.crypto), fiatText: fiatText || undefined,
+    } : {
       chain: net().chain, network: net().network, address: state.address,
       amount: trimFloat(a.crypto), fiatText: fiatText || undefined,
     });
@@ -353,6 +375,14 @@ async function openSettings() {
 
 async function populateAddresses() {
   const sel = $("#addressSelect");
+  // Lightning receives into the active Lightning account; no address to pick.
+  if (isLightning()) {
+    sel.innerHTML = `<option value="">Active Lightning account</option>`;
+    $("#addressHint").textContent = "Lightning uses your active Lightning account in Maknoon.";
+    state.address = null; state.addressName = null;
+    renderReceiveLine();
+    return;
+  }
   let list = [];
   try { list = await window.maknoon.addressBook.list({ chain: net().chain }); } catch (e) {}
   if (!list || !list.length) {
