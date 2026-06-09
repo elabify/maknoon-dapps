@@ -19,11 +19,11 @@ const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 // verify-and-pay flow (ADR-0031). The holder signs offline against these and
 // the wallet broadcasts. Sepolia is the Phase-0 pilot network.
 const EVM_RPC = {
-  sepolia:  "https://eth-sepolia.public.blastapi.io",
-  mainnet:  "https://eth.llamarpc.com",
+  sepolia:  "https://ethereum-sepolia-rpc.publicnode.com",
+  mainnet:  "https://ethereum-rpc.publicnode.com",
   base:     "https://mainnet.base.org",
   arbitrum: "https://arb1.arbitrum.io/rpc",
-  polygon:  "https://polygon-rpc.com",
+  polygon:  "https://polygon-bor-rpc.publicnode.com",
 };
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
