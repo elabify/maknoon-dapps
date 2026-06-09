@@ -12,7 +12,6 @@
 
 "use strict";
 
-const SANCTIONS_SCHEMA = "elabify://schema/global/musnadMaknoon/v1";
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
@@ -243,11 +242,15 @@ function captureRequest() {
       purpose: "Point-of-sale identity",
     };
   }
+  // Sanctions check rides the passport's own built-in screening result
+  // (the `sdnScreen` claim: { screenedAt, result, datasetVersion }). One
+  // credential (the passport) covers both identity and the sanctions gate;
+  // there is no separate sanctions VC.
   return {
-    schema: SANCTIONS_SCHEMA,
-    requiredClaims: ["sanctionsScreenedAt", "jurisdiction", "isPep"],
+    schema: PASSPORT_SCHEMA,
+    requiredClaims: ["sdnScreen", "givenName", "familyName"],
     maxAgeSec: ONE_YEAR,
-    purpose: "Point-of-sale sanctions check",
+    purpose: "Point-of-sale sanctions screening (passport)",
   };
 }
 
