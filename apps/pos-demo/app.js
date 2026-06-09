@@ -14,6 +14,17 @@
 
 const SANCTIONS_SCHEMA = "elabify://schema/global/musnadMaknoon/v1";
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
+
+// Public JSON-RPC endpoints the merchant hands to the wallet for the unified
+// verify-and-pay flow (ADR-0031). The holder signs offline against these and
+// the wallet broadcasts. Sepolia is the Phase-0 pilot network.
+const EVM_RPC = {
+  sepolia:  "https://eth-sepolia.public.blastapi.io",
+  mainnet:  "https://eth.llamarpc.com",
+  base:     "https://mainnet.base.org",
+  arbitrum: "https://arb1.arbitrum.io/rpc",
+  polygon:  "https://polygon-rpc.com",
+};
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
 // Networks (the coin/chain family) and their chains (sub-networks).
@@ -262,6 +273,53 @@ async function runCharge() {
   setStep("pay", "", "…");
   $("#verifyDetail").textContent = state.capture === "passport" ? "Passport identity" : "Sanctions-clean, within 12 months";
 
+  // Single-tap unified verify-and-pay (ADR-0031) for EVM rails: one native
+  // sheet collects identity + the holder's signed payment and the wallet
+  // broadcasts. Non-EVM networks fall through to the two-step flow below.
+  if (net().chain === "ethereum" && window.maknoon.commerce) {
+    const rail = {
+      chain: "ethereum", network: net().network, asset: net().ticker,
+      address: state.address, amount: trimFloat(a.crypto), assetDecimals: 18,
+      rpcURL: EVM_RPC[net().network] || EVM_RPC.sepolia,
+    };
+    let v;
+    try {
+      v = await window.maknoon.commerce.collectAndCharge({
+        identity: captureRequest(),
+        payment: {
+          fiatAmount: a.fiat != null ? a.fiat.toFixed(2) : "",
+          fiatCode: state.fiatCode, acceptedRails: [rail], reference: "pos",
+        },
+        lane: "full",
+      });
+    } catch (e) {
+      setStep("verify", "bad", "Cancelled");
+      return result("bad", `<h3>Cancelled</h3><p>${esc(e.message || "")}</p>`);
+    }
+    if (v.decision !== "GRANT") {
+      setStep("verify", "bad", "Denied");
+      const missing = Array.isArray(v.missing) ? v.missing : [];
+      const hint = missing.length
+        ? `<p>Customer must also share: <strong>${esc(missing.join(", "))}</strong></p>` : "";
+      return result("bad", `<h3>Payment blocked</h3><p>${esc(v.message || reasonText(v.reason))}</p>${hint}`);
+    }
+    setStep("verify", "ok", "Verified");
+    setStep("pay", "ok", v.txHash ? "Received" : "Authorized");
+    const fiatText = a.fiat != null ? `${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
+    await appendTx({
+      at: new Date().toISOString(), chain: "ethereum", network: net().network,
+      ticker: net().ticker, crypto: trimFloat(a.crypto), fiatText,
+      badge: badgeFor(v), attrs: v.disclosed || {}, txHash: v.txHash || null,
+    });
+    result("ok",
+      `<h3>Verified &amp; paid</h3>
+       <p>${esc(trimFloat(a.crypto))} ${esc(net().ticker)}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
+       <p><span class="tx-badge">${esc(badgeFor(v))}</span></p>
+       ${v.txHash ? `<p class="mono">${esc(v.txHash)}</p>` : `<p class="mono">authorized</p>`}`);
+    state.digits = "0"; renderAmount();
+    return;
+  }
+
   // 1. Verify the customer (cross-device).
   let verdict;
   try {
@@ -272,7 +330,14 @@ async function runCharge() {
   }
   if (verdict.decision !== "GRANT") {
     setStep("verify", "bad", "Denied");
-    return result("bad", `<h3>Payment blocked</h3><p>${esc(reasonText(verdict.reason))}</p>`);
+    // The wallet now returns a specific human `message` (which attributes are
+    // missing vs shared) and a `missing` list; prefer them over the generic map.
+    const msg = verdict.message || reasonText(verdict.reason);
+    const missing = Array.isArray(verdict.missing) ? verdict.missing : [];
+    const hint = missing.length
+      ? `<p>Customer must also share: <strong>${esc(missing.join(", "))}</strong></p>`
+      : "";
+    return result("bad", `<h3>Payment blocked</h3><p>${esc(msg)}</p>${hint}`);
   }
   const badge = badgeFor(verdict);
   setStep("verify", "ok", "Verified");
