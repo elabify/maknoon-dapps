@@ -17,7 +17,7 @@
       "channel": "beta",
       "requiresMaknoonVersion": "0.4.1",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
-      "manifestSha256": "d7ea0d8d05281c6debb9fef97a6bdcd98404fb2df5973e1b6da8d79925275f3b",
+      "manifestSha256": "7d3c605812e8b0498997f7e0730a3684b49c2599fa2cb61588e0707d48f0d12a",
       "permissions": [
         "identity",
         "payment"

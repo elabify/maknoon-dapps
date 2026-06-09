@@ -14,17 +14,6 @@
 
 const SANCTIONS_SCHEMA = "elabify://schema/global/musnadMaknoon/v1";
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
-
-// Public JSON-RPC endpoints the merchant hands to the wallet for the unified
-// verify-and-pay flow (ADR-0031). The holder signs offline against these and
-// the wallet broadcasts. Sepolia is the Phase-0 pilot network.
-const EVM_RPC = {
-  sepolia:  "https://ethereum-sepolia-rpc.publicnode.com",
-  mainnet:  "https://ethereum-rpc.publicnode.com",
-  base:     "https://mainnet.base.org",
-  arbitrum: "https://arb1.arbitrum.io/rpc",
-  polygon:  "https://polygon-bor-rpc.publicnode.com",
-};
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
 // Networks (the coin/chain family) and their chains (sub-networks).
@@ -277,10 +266,11 @@ async function runCharge() {
   // sheet collects identity + the holder's signed payment and the wallet
   // broadcasts. Non-EVM networks fall through to the two-step flow below.
   if (net().chain === "ethereum" && window.maknoon.commerce) {
+    // No RPC here on purpose: the wallet resolves the endpoint from the Maknoon
+    // user's own Ethereum network settings, the same ones the wallet uses.
     const rail = {
       chain: "ethereum", network: net().network, asset: net().ticker,
       address: state.address, amount: trimFloat(a.crypto), assetDecimals: 18,
-      rpcURL: EVM_RPC[net().network] || EVM_RPC.sepolia,
     };
     let v;
     try {
