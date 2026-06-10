@@ -117,6 +117,21 @@ body {
 }
 .hint { color: var(--muted); font-size: 12px; margin: -8px 2px 14px; }
 
+/* Merchant DID: wrap the long identifier instead of scrolling, with a copy button. */
+.merchant-id-row { display: flex; align-items: flex-start; gap: 8px; margin: -2px 2px 12px; }
+.merchant-id {
+  flex: 1; min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; line-height: 1.45; color: var(--muted);
+  word-break: break-all; overflow-wrap: anywhere;
+}
+.copy-btn {
+  flex: 0 0 auto; align-self: flex-start;
+  background: var(--surface-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; padding: 4px 11px; font-size: 12px; cursor: pointer;
+}
+.copy-btn:active { opacity: .65; }
+
 .seg { display: flex; gap: 8px; }
 .seg-btn { flex: 1; background: var(--bg); border: 1px solid var(--line); color: var(--muted); border-radius: 12px; padding: 11px; font-size: 14px; cursor: pointer; }
 .seg-btn.active { background: rgba(139,92,246,.18); color: var(--accent); border-color: var(--accent); }

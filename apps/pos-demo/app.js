@@ -444,16 +444,40 @@ $("#storeName").addEventListener("input", (e) => {
   renderMerchant();   // refresh the mailto with the new name
 });
 
+// Copy the merchant DID. Prefer the async clipboard API; fall back to a hidden
+// textarea + execCommand so it works in the webview without a clipboard grant.
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+$("#copyMerchantId").addEventListener("click", async (e) => {
+  const did = $("#merchantId").textContent || "";
+  if (!did) return;
+  const ok = await copyText(did);
+  const btn = e.currentTarget, prev = btn.textContent;
+  btn.textContent = ok ? "Copied" : "Copy failed";
+  setTimeout(() => { btn.textContent = prev; }, 1500);
+});
+
 // Per-install merchant verifier identity + verification status (native key).
 async function renderMerchant() {
-  const statusEl = $("#merchantStatus"), idEl = $("#merchantId"), link = $("#requestVerify");
-  if (!window.maknoon.merchant) { statusEl.textContent = ""; return; }
+  const statusEl = $("#merchantStatus"), idEl = $("#merchantId"),
+        idRow = $("#merchantIdRow"), link = $("#requestVerify");
+  if (!window.maknoon.merchant) { statusEl.textContent = ""; idRow.style.display = "none"; return; }
   try {
     const id = await window.maknoon.merchant.getIdentity();
     const verified = !!id.verified;
     statusEl.textContent = verified ? "✓ Verified merchant" : "Self-signed (not yet verified)";
     statusEl.style.color = verified ? "#2ecc71" : "#e67e22";
     idEl.textContent = id.did || "";
+    idRow.style.display = id.did ? "flex" : "none";
     if (verified) {
       link.style.display = "none";
     } else {
@@ -465,7 +489,7 @@ async function renderMerchant() {
         "Name: " + name + "\nVerifier DID: " + (id.did || "") + "\nPublic key: " + (id.publicKey || ""));
       link.href = "mailto:sales@elabify.com?subject=" + subject + "&body=" + body;
     }
-  } catch (e) { statusEl.textContent = ""; }
+  } catch (e) { statusEl.textContent = ""; idRow.style.display = "none"; }
 }
 
 async function populateAddresses() {
