@@ -432,7 +432,40 @@ async function openSettings() {
   populateChains();
   await populateAddresses();
   syncCaptureUI();
+  try { $("#storeName").value = (await window.maknoon.storage.getItem("merchantName")) || ""; } catch (e) {}
+  await renderMerchant();
   $("#settingsOverlay").classList.remove("hidden");
+}
+
+// The store name customers see (verifierName / merchantName). Persisted under
+// "merchantName"; the wallet injects it into requests this dApp signs.
+$("#storeName").addEventListener("input", (e) => {
+  try { window.maknoon.storage.setItem("merchantName", e.target.value.trim()); } catch (err) {}
+  renderMerchant();   // refresh the mailto with the new name
+});
+
+// Per-install merchant verifier identity + verification status (native key).
+async function renderMerchant() {
+  const statusEl = $("#merchantStatus"), idEl = $("#merchantId"), link = $("#requestVerify");
+  if (!window.maknoon.merchant) { statusEl.textContent = ""; return; }
+  try {
+    const id = await window.maknoon.merchant.getIdentity();
+    const verified = !!id.verified;
+    statusEl.textContent = verified ? "✓ Verified merchant" : "Self-signed (not yet verified)";
+    statusEl.style.color = verified ? "#2ecc71" : "#e67e22";
+    idEl.textContent = id.did || "";
+    if (verified) {
+      link.style.display = "none";
+    } else {
+      link.style.display = "block";
+      const name = $("#storeName").value || "Merchant";
+      const subject = encodeURIComponent("Maknoon merchant verification request");
+      const body = encodeURIComponent(
+        "Please register this merchant as a verified verifier:\n\n" +
+        "Name: " + name + "\nVerifier DID: " + (id.did || "") + "\nPublic key: " + (id.publicKey || ""));
+      link.href = "mailto:sales@elabify.com?subject=" + subject + "&body=" + body;
+    }
+  } catch (e) { statusEl.textContent = ""; }
 }
 
 async function populateAddresses() {

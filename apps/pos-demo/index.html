@@ -80,6 +80,11 @@
         <h2 class="sheet-title">Settings</h2>
 
         <label class="field">
+          <span>Store name</span>
+          <input type="text" id="storeName" placeholder="Shown to customers when you verify or charge" autocapitalize="words" />
+        </label>
+
+        <label class="field">
           <span>Network</span>
           <select id="networkSelect"></select>
         </label>
@@ -107,6 +112,13 @@
           <label class="chk"><input type="checkbox" value="familyName" checked /> Family name</label>
           <label class="chk"><input type="checkbox" value="nationality" checked /> Nationality</label>
           <label class="chk"><input type="checkbox" value="dateOfBirth" /> Date of birth</label>
+        </div>
+
+        <div class="field">
+          <span>Merchant verification</span>
+          <p class="hint" id="merchantStatus">Checking…</p>
+          <p class="hint mono" id="merchantId"></p>
+          <a id="requestVerify" class="hint" href="#" style="display:none">Email sales@elabify.com to get a verified badge →</a>
         </div>
 
         <div class="sheet-actions">

@@ -13,11 +13,11 @@
       "iconName": "creditcard.fill",
       "statusLabel": "Beta",
       "curatedBy": "Elabify",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "channel": "beta",
       "requiresMaknoonVersion": "0.4.1",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
-      "manifestSha256": "5a9b007a80e6c724c62428ff95b9f8a9e8b066e870793f2dbc38eebf51962a48",
+      "manifestSha256": "8700d3ad63e225b826f699d3f7be4804577af437994f4d041ffebb919086a235",
       "permissions": [
         "identity",
         "payment"
