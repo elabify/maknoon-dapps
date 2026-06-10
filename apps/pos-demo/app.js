@@ -275,9 +275,14 @@ async function runCharge() {
       chain: "ethereum", network: net().network, asset: net().ticker,
       address: state.address, amount: trimFloat(a.crypto), assetDecimals: 18,
     };
+    // Pass our own (live) store name so the customer sees it instead of the
+    // catalog title. The dApp owns its name (window.maknoon.storage).
+    let merchantName = "";
+    try { merchantName = (await window.maknoon.storage.getItem("merchantName")) || ""; } catch (e) {}
     let v;
     try {
       v = await window.maknoon.commerce.collectAndCharge({
+        merchantName: merchantName || undefined,
         identity: captureRequest(),
         payment: {
           fiatAmount: a.fiat != null ? a.fiat.toFixed(2) : "",

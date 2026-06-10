@@ -27,7 +27,7 @@ const CATALOG_PATH = join(ROOT, "catalog.json");
 // `requiresMaknoon` is the minimum Maknoon app version the dApp targets.
 const APP_META = {
   "pos-demo": {
-    version: "0.1.2", entry: "index.html", channel: "beta", requiresMaknoon: "0.4.1",
+    version: "0.1.3", entry: "index.html", channel: "beta", requiresMaknoon: "0.4.1",
     capabilities: [
       { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
       { name: "payment", reason: "Receive payments and pick a receiving address" },
