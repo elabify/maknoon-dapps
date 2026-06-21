@@ -15,9 +15,11 @@
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 const ONE_YEAR = 365 * 24 * 60 * 60;
 
-// Networks (the coin/chain family) and their chains (sub-networks).
-// rawValues match the native enums.
-// Listed alphabetically by label.
+// Networks (the coin/chain family) and their chains (sub-networks). The chain
+// dropdown is normally populated from the wallet's canonical ordered list via
+// window.maknoon.wallet.getNetworks; this hardcoded table is the fallback for
+// older hosts and the source of per-network tickers (e.g. Polygon -> POL).
+// `network` values match the native enums. Families listed alphabetically.
 const FAMILIES = [
   { chain: "bitcoin", label: "Bitcoin", chains: [
     { network: "mainnet",  label: "Mainnet", ticker: "BTC" },
@@ -50,7 +52,12 @@ const state = {
   digits: "0",          // raw entry string
   inputIsFiat: true,    // fiat-first by default
   famIndex: 0,          // selected network family
-  chainIndex: 0,        // selected chain within the family
+  chainIndex: 0,        // selected chain within the family (index into state.chains)
+  // The active chain list for the current family. Populated from the wallet's
+  // canonical ordered network list (window.maknoon.wallet.getNetworks); falls
+  // back to the family's hardcoded `chains` on older hosts. Each entry:
+  // { network, label, ticker, isTestnet }.
+  chains: [],
   address: null,
   addressName: null,
   // Which asset to receive. Defaults to the native coin of the family.
@@ -66,10 +73,16 @@ const state = {
 function fam() { return FAMILIES[state.famIndex]; }
 function isLightning() { return fam().chain === "lightning"; }
 function isBitcoinFamily() { return fam().chain === "bitcoin" || fam().chain === "lightning"; }
+// The active chain list: the wallet-provided list once populated, otherwise the
+// family's hardcoded fallback (used at boot before populateChains has run).
+function chainList() {
+  return (state.chains && state.chains.length) ? state.chains : fam().chains;
+}
 // Flattened current selection: { chain, network, ticker, label }.
 function net() {
   const f = fam();
-  const c = f.chains[state.chainIndex] || f.chains[0];
+  const list = chainList();
+  const c = list[state.chainIndex] || list[0];
   return { chain: f.chain, network: c.network, ticker: c.ticker, label: `${f.label} · ${c.label}` };
 }
 
@@ -92,6 +105,10 @@ async function loadSettings() {
       const fi = FAMILIES.findIndex((f) => f.chain === s.chain);
       if (fi >= 0) {
         state.famIndex = fi;
+        // Remember the desired network id; the real index is resolved once
+        // populateChains() has the wallet's ordered list (which may differ from
+        // the hardcoded fallback order). Fall back to the hardcoded index now.
+        state.networkId = s.network || null;
         const ci = FAMILIES[fi].chains.findIndex((c) => c.network === s.network);
         state.chainIndex = ci >= 0 ? ci : 0;
       }
@@ -456,9 +473,11 @@ $("#saveSettings").addEventListener("click", async () => {
 $("#networkSelect").addEventListener("change", async (e) => {
   state.famIndex = parseInt(e.target.value, 10) || 0;
   state.chainIndex = 0;
+  state.networkId = null;       // new family -> default to its primary network
+  state.chains = [];
   state.address = null; state.addressName = null;
   state.asset = null;           // reset to native for the new family
-  populateChains();
+  await populateChains();
   await populateAddresses();
   await populateAssets();
   await refreshRate();
@@ -466,6 +485,8 @@ $("#networkSelect").addEventListener("change", async (e) => {
 });
 $("#chainSelect").addEventListener("change", async (e) => {
   state.chainIndex = parseInt(e.target.value, 10) || 0;
+  const sel = chainList()[state.chainIndex];
+  state.networkId = sel ? sel.network : null;
   state.asset = null;           // assets differ per chain (different tokens)
   await populateAssets();
   await refreshRate();          // ticker/rate can differ per chain (e.g. POL)
@@ -485,17 +506,83 @@ $("#assetSelect").addEventListener("change", (e) => {
   refreshRate(); renderAmount(); saveSettings();
 });
 
-function populateChains() {
+// Build the Chain dropdown for the current family from the wallet's canonical
+// ordered network list (window.maknoon.wallet.getNetworks({chain})). The bridge
+// returns [{ id, label, isTestnet }] already ordered (primary mainnet first,
+// other mainnets, then testnets). We render mainnets and testnets into separate
+// <optgroup>s so the divider is visible. Tickers are not part of the bridge, so
+// we borrow them from the hardcoded fallback by network id, defaulting to the
+// family's native ticker. If getNetworks is missing or throws (older host), we
+// fall back to the family's hardcoded chain list so the dApp never breaks.
+async function resolveChains() {
+  const f = fam();
+  // Lightning has no on-chain networks; keep its single hardcoded entry.
+  if (f.chain === "lightning") return f.chains.map((c) => ({ ...c, isTestnet: false }));
+
+  let list = null;
+  try {
+    const wallet = window.maknoon && window.maknoon.wallet;
+    if (wallet && typeof wallet.getNetworks === "function") {
+      const got = await wallet.getNetworks({ chain: f.chain });
+      if (Array.isArray(got) && got.length) {
+        // Ticker lookup from the hardcoded fallback (e.g. Polygon -> POL).
+        const tickerById = {};
+        for (const c of f.chains) tickerById[c.network] = c.ticker;
+        const nativeTicker = f.chains[0] ? f.chains[0].ticker : "";
+        list = got.map((g) => ({
+          network: g.id,
+          label: g.label || g.id,
+          ticker: tickerById[g.id] || nativeTicker,
+          isTestnet: !!g.isTestnet,
+        }));
+      }
+    }
+  } catch (e) { list = null; }
+
+  // Older host / empty / failure: hardcoded fallback. Derive isTestnet from the
+  // label so the optgroup split still works on the fallback list.
+  if (!list) {
+    list = f.chains.map((c) => ({
+      ...c,
+      isTestnet: c.isTestnet != null ? c.isTestnet : /test|sepolia|devnet|nile|shasta|signet/i.test(c.network + " " + c.label),
+    }));
+  }
+  return list;
+}
+
+async function populateChains() {
   const sel = $("#chainSelect");
-  sel.innerHTML = fam().chains.map((c, i) =>
-    `<option value="${i}" ${i === state.chainIndex ? "selected" : ""}>${c.label} (${c.ticker})</option>`).join("");
+  state.chains = await resolveChains();
+
+  // Re-resolve the selected index from the persisted/current network id against
+  // the (possibly reordered) list, so the right chain stays selected.
+  const wantId = state.networkId || (chainList()[state.chainIndex] && chainList()[state.chainIndex].network);
+  let idx = state.chains.findIndex((c) => c.network === wantId);
+  if (idx < 0) idx = 0;
+  state.chainIndex = idx;
+  state.networkId = state.chains[idx] ? state.chains[idx].network : null;
+
+  const opt = (c, i) =>
+    `<option value="${i}" ${i === state.chainIndex ? "selected" : ""}>${esc(c.label)} (${esc(c.ticker)})</option>`;
+  const mains = state.chains.map((c, i) => ({ c, i })).filter((x) => !x.c.isTestnet);
+  const tests = state.chains.map((c, i) => ({ c, i })).filter((x) => x.c.isTestnet);
+
+  // Use optgroups to put a visible divider between mainnets and testnets. If a
+  // family has only one bucket, render the flat list (no empty group label).
+  if (mains.length && tests.length) {
+    sel.innerHTML =
+      `<optgroup label="Mainnet">${mains.map((x) => opt(x.c, x.i)).join("")}</optgroup>` +
+      `<optgroup label="Testnet">${tests.map((x) => opt(x.c, x.i)).join("")}</optgroup>`;
+  } else {
+    sel.innerHTML = state.chains.map((c, i) => opt(c, i)).join("");
+  }
 }
 
 // Populate the Asset picker. Bitcoin + Lightning are fixed (BTC / sats) so the
 // field is hidden. ETH/SOL/TRON ask the host for the wallet's assets via
-// window.maknoon.wallet.getAssets; native first, then USDC/USDT, then held
-// tokens. If getAssets is missing or throws (older host), fall back to native
-// only and never crash.
+// window.maknoon.wallet.getAssets, which returns native-first then alphabetical
+// by symbol; we render in that order (no client-side re-sort). If getAssets is
+// missing or throws (older host), fall back to native only and never crash.
 async function populateAssets() {
   const field = $("#assetField"), hint = $("#assetHint"), sel = $("#assetSelect");
   if (!field) return;
@@ -518,8 +605,8 @@ async function populateAssets() {
           decimals: typeof g.decimals === "number" ? g.decimals : nativeAsset().decimals,
           kind: g.kind || "native", balance: g.balance,
         }));
-        // Native first if the host did not already order it that way.
-        assets.sort((x, y) => (x.kind === "native" ? -1 : 0) - (y.kind === "native" ? -1 : 0));
+        // The getAssets bridge returns native-first then alphabetical by symbol;
+        // render in the order returned (no client-side re-sort).
       }
     }
   } catch (e) { assets = [nativeAsset()]; }   // older host / failure -> native only
@@ -544,7 +631,7 @@ async function populateAssets() {
 async function openSettings() {
   const ns = $("#networkSelect");
   ns.innerHTML = FAMILIES.map((f, i) => `<option value="${i}" ${i === state.famIndex ? "selected" : ""}>${f.label}</option>`).join("");
-  populateChains();
+  await populateChains();
   await populateAddresses();
   await populateAssets();
   syncVerifyChecks();
@@ -694,6 +781,9 @@ function esc(s) {
     return;
   }
   await loadSettings();
+  // Resolve the chain list from the wallet's canonical network ordering so the
+  // selected network id (and its index) is correct before pricing/addresses.
+  try { await populateChains(); } catch (e) {}
   // Resolve a default address if none chosen yet.
   if (!state.address) { try { await populateAddresses(); } catch (e) {} }
   // Resolve the asset list (and re-validate any persisted asset) before pricing.
