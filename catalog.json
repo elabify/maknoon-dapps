@@ -1,6 +1,6 @@
 {
   "id": "elabify.maknoon-dapps",
-  "name": "Maknoon dApps",
+  "name": "Maknoon Apps",
   "curator": "Elabify",
   "summary": "",
   "url": "https://elabify.github.io/maknoon-dapps/catalog.json",
@@ -8,10 +8,10 @@
     {
       "id": "pos-demo",
       "title": "Point of Sale",
-      "summary": "Verify a customer (sanctions or passport) then accept payment on any network.",
+      "summary": "Verify a customer and accept payments.",
       "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, or passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book, auto-detected on-chain. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
       "iconName": "creditcard.fill",
-      "statusLabel": "Beta",
+      "statusLabel": "Stable",
       "curatedBy": "Elabify",
       "version": "0.1.3",
       "channel": "beta",
@@ -30,6 +30,39 @@
         {
           "name": "payment",
           "reason": "Receive payments and pick a receiving address"
+        }
+      ]
+    },
+    {
+      "id": "pos-demo-beta",
+      "title": "Point of Sale (Beta)",
+      "summary": "Verify a customer and accept payments.",
+      "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, plus optional passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book. On Ethereum, Solana, and Tron you can pick which asset to receive (the native coin, USDC, USDT, or a token your wallet holds); Bitcoin and Lightning receive the native coin. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
+      "iconName": "creditcard.fill",
+      "statusLabel": "Beta",
+      "curatedBy": "Elabify",
+      "version": "0.1.4",
+      "channel": "beta",
+      "requiresMaknoonVersion": "0.6.0",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo-beta/manifest.json",
+      "manifestSha256": "2bc8f3eb2011beb26f58ca603e66629a01be43a147d61deaa631971d12442699",
+      "permissions": [
+        "identity",
+        "payment",
+        "wallet"
+      ],
+      "capabilities": [
+        {
+          "name": "identity",
+          "reason": "Verify each customer holds a sanctions-clean credential"
+        },
+        {
+          "name": "payment",
+          "reason": "Receive payments and pick a receiving address"
+        },
+        {
+          "name": "wallet",
+          "reason": "Read which assets your wallets hold so you can pick one to receive"
         }
       ]
     }

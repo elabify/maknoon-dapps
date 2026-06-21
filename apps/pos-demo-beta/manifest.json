@@ -1,0 +1,18 @@
+{
+  "version": "0.1.4",
+  "entry": "index.html",
+  "files": [
+    {
+      "path": "app.js",
+      "sha256": "cb422272128d0c957d9c57272526d4ed3ac9eb49a500afb17539553b8b7d514a"
+    },
+    {
+      "path": "index.html",
+      "sha256": "4100411f8dc854780b2eb7dad94645c47d829ac1cc041de7399c24e6e246cba9"
+    },
+    {
+      "path": "styles.css",
+      "sha256": "25df9fd2bd4e100fd620d1745b44bf952044ffe7f16333741b86f11c2573f243"
+    }
+  ]
+}

@@ -33,6 +33,14 @@ const APP_META = {
       { name: "payment", reason: "Receive payments and pick a receiving address" },
     ],
   },
+  "pos-demo-beta": {
+    version: "0.1.4", entry: "index.html", channel: "beta", requiresMaknoon: "0.6.0",
+    capabilities: [
+      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
+      { name: "payment", reason: "Receive payments and pick a receiving address" },
+      { name: "wallet", reason: "Read which assets your wallets hold so you can pick one to receive" },
+    ],
+  },
 };
 
 function sha256Hex(buf) {
