@@ -287,6 +287,47 @@ function result(kind, html) {
   box.innerHTML = html;
 }
 
+// Block-explorer tx URL for a settled rail; null when none (e.g. Lightning,
+// or an unknown network). The Maknoon host opens external https links in the
+// device browser when tapped.
+function explorerTxUrl(chain, network, txHash) {
+  if (!txHash) return null;
+  const E = {
+    ethereum: {
+      mainnet: "https://etherscan.io/tx/",
+      sepolia: "https://sepolia.etherscan.io/tx/",
+      "arbitrum-sepolia": "https://sepolia.arbiscan.io/tx/",
+      "base-sepolia": "https://sepolia.basescan.org/tx/",
+      "optimism-sepolia": "https://sepolia-optimism.etherscan.io/tx/",
+    },
+    solana: { mainnet: "https://explorer.solana.com/tx/", devnet: "https://explorer.solana.com/tx/" },
+    tron: { mainnet: "https://tronscan.org/#/transaction/", nile: "https://nile.tronscan.org/#/transaction/" },
+    bitcoin: {
+      mainnet: "https://mempool.space/tx/",
+      testnet: "https://mempool.space/testnet/tx/",
+      testnet3: "https://mempool.space/testnet/tx/",
+      signet: "https://mempool.space/signet/tx/",
+    },
+  };
+  const base = (E[chain] || {})[network];
+  if (!base) return null;
+  let url = base + encodeURIComponent(txHash);
+  if (chain === "solana" && network === "devnet") url += "?cluster=devnet";
+  return url;
+}
+
+// Render a settlement ref as a tappable explorer link when we know the
+// explorer, else plain mono text. Plain <a href> (no target) so the host's
+// nav policy routes the tap to the system browser.
+function txLink(chain, network, txHash, fallbackLabel) {
+  if (!txHash) return `<p class="mono">${esc(fallbackLabel || "—")}</p>`;
+  const url = explorerTxUrl(chain, network, txHash);
+  const short = txHash.length > 18 ? txHash.slice(0, 10) + "…" + txHash.slice(-6) : txHash;
+  return url
+    ? `<p class="mono"><a href="${esc(url)}">${esc(short)} ↗</a></p>`
+    : `<p class="mono">${esc(txHash)}</p>`;
+}
+
 // PII claims the merchant can optionally request, in display order.
 const PII_CLAIMS = ["givenName", "familyName", "nationality", "dateOfBirth", "documentNumber"];
 
@@ -377,7 +418,7 @@ async function runCharge() {
       `<h3>Verified &amp; paid</h3>
        <p>${esc(trimFloat(a.crypto))} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
        <p><span class="tx-badge">${esc(badgeFor(v))}</span></p>
-       ${v.txHash ? `<p class="mono">${esc(v.txHash)}</p>` : `<p class="mono">authorized</p>`}`);
+       ${txLink("ethereum", net().network, v.txHash, "authorized")}`);
     state.digits = "0"; renderAmount();
     return;
   }
@@ -442,7 +483,7 @@ async function runCharge() {
     `<h3>Payment received</h3>
      <p>${esc(entry.crypto)} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
      <p><span class="tx-badge">${esc(badge)}</span></p>
-     ${pay.txHash ? `<p class="mono">${esc(pay.txHash)}</p>` : `<p class="mono">confirmed</p>`}`);
+     ${txLink(net().chain, net().network, pay.txHash, "confirmed")}`);
   // Reset entry for the next sale.
   state.digits = "0"; renderAmount();
 }
