@@ -29,8 +29,8 @@ const APP_META = {
   // Single Point of Sale app (the former pos-demo + pos-demo-beta, merged). Stays
   // on the beta channel; carries the all-chains Verify & Pay + asset picker, so it
   // needs the wallet capability and Maknoon >= 0.6.0.
-  "pos-demo": {
-    version: "0.1.4", entry: "index.html", channel: "beta", requiresMaknoon: "0.6.0",
+  "pos": {
+    version: "0.1.5", entry: "index.html", channel: "beta", requiresMaknoon: "0.6.0",
     capabilities: [
       { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
       { name: "payment", reason: "Receive payments and pick a receiving address" },
@@ -83,6 +83,7 @@ for (const appId of readdirSync(APPS_DIR)) {
     entry.version = meta.version;
     if (meta.channel) entry.channel = meta.channel;
     if (meta.requiresMaknoon) entry.requiresMaknoonVersion = meta.requiresMaknoon;
+    if (meta.supersededAtMaknoon) entry.supersededAtMaknoonVersion = meta.supersededAtMaknoon;
     if (meta.capabilities) entry.capabilities = meta.capabilities;
     built++;
     console.log(`[build] ${appId}: v${meta.version} ${meta.channel || ""} ${files.length} files, manifest ${manifestSha.slice(0, 12)}…`);

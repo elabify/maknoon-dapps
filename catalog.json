@@ -6,18 +6,18 @@
   "url": "https://elabify.github.io/maknoon-dapps/catalog.json",
   "apps": [
     {
-      "id": "pos-demo",
+      "id": "pos",
       "title": "Point of Sale",
       "summary": "Verify a customer and accept payments.",
       "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, plus optional passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book. On Ethereum, Solana, and Tron you can pick which asset to receive (the native coin, USDC, USDT, or a token your wallet holds); Bitcoin and Lightning receive the native coin. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
       "iconName": "creditcard.fill",
       "statusLabel": "Beta",
       "curatedBy": "Elabify",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "channel": "beta",
       "requiresMaknoonVersion": "0.6.0",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
-      "manifestSha256": "918d6ed3965126baf2d75bec7fc7b389f626384a259e6ce0d9024ed3f4b717fd",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/manifest.json",
+      "manifestSha256": "091c6057dd4e78ba131cc34e247b7a599baf6cde71307c853747509fddb4cea5",
       "permissions": [
         "identity",
         "payment",

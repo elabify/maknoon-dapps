@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Maknoon POS</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">◈</span>
+        <span class="brand-name">Maknoon POS</span>
+        <span class="badge badge-beta">Beta</span>
+      </div>
+      <div class="badges">
+        <button id="netChip" class="net-chip" data-i18n="net_default">Network</button>
+        <button id="receiptsBtn" class="icon-btn" data-i18n-aria="aria_receipts" aria-label="Receipts">🧾</button>
+        <button id="settingsBtn" class="icon-btn" data-i18n-aria="aria_settings" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+    <section class="amount-panel">
+      <div class="amount-label" id="amountLabel" data-i18n="amount">Amount</div>
+      <div class="amount-display"><span class="unit" id="unit">$</span><span id="amount">0.00</span></div>
+      <button id="flipBtn" class="flip-btn">⇄ <span id="equivalent" data-i18n="enter_amount">enter an amount</span></button>
+    </section>
+
+    <div id="receiveLine" class="receive-line" data-i18n="no_receiving_wallet">No receiving wallet, open settings</div>
+
+    <section class="keypad" id="keypad">
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key" data-k=".">.</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key key-del" data-k="del">⌫</button>
+    </section>
+
+    <button id="chargeBtn" class="charge-btn" data-i18n="charge_customer" disabled>Charge customer</button>
+
+    <!-- charge flow / result overlay -->
+    <div id="overlay" class="overlay hidden">
+      <div class="sheet">
+        <div class="steps">
+          <div class="step" data-step="verify">
+            <span class="step-dot"></span>
+            <div class="step-body">
+              <div class="step-title" data-i18n="step_verify">Verify customer</div>
+              <div class="step-detail" id="verifyDetail" data-i18n="identity_check">Identity check</div>
+            </div>
+            <span class="step-state" data-state="verify">…</span>
+          </div>
+          <div class="step" data-step="pay">
+            <span class="step-dot"></span>
+            <div class="step-body">
+              <div class="step-title" data-i18n="step_pay">Take payment</div>
+              <div class="step-detail" id="payDetail" data-i18n="onchain_transfer">On-chain transfer</div>
+            </div>
+            <span class="step-state" data-state="pay">…</span>
+          </div>
+        </div>
+        <div id="resultBox" class="result-box hidden"></div>
+        <div class="sheet-actions">
+          <button id="closeOverlay" class="ghost-btn" data-i18n="close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- settings overlay -->
+    <div id="settingsOverlay" class="overlay hidden">
+      <div class="sheet scroll">
+        <h2 class="sheet-title" data-i18n="settings">Settings</h2>
+
+        <label class="field">
+          <span data-i18n="store_name">Store name</span>
+          <input type="text" id="storeName" data-i18n-ph="store_name_ph" placeholder="Shown to customers when you verify or charge" autocapitalize="words" />
+        </label>
+
+        <label class="field">
+          <span data-i18n="network">Network</span>
+          <select id="networkSelect"></select>
+        </label>
+
+        <label class="field">
+          <span data-i18n="chain">Chain</span>
+          <select id="chainSelect"></select>
+        </label>
+
+        <label class="field">
+          <span data-i18n="receive_to">Receive to</span>
+          <select id="addressSelect"></select>
+        </label>
+        <p class="hint" id="addressHint" data-i18n="addr_hint">Pick one of your wallets or saved addresses.</p>
+
+        <label class="field" id="assetField">
+          <span data-i18n="asset">Asset</span>
+          <select id="assetSelect"></select>
+        </label>
+        <p class="hint" id="assetHint" data-i18n="asset_hint">Pick which asset to receive.</p>
+
+        <div class="field">
+          <span data-i18n="verify_from_customer">Verify from customer</span>
+          <div id="verifyChecks" class="attrs">
+            <label class="chk"><input type="checkbox" value="sdnScreen" checked /> <span data-i18n="chk_sanctions">Sanctions: clean</span></label>
+            <label class="chk"><input type="checkbox" value="screenFresh" checked /> <span data-i18n="chk_fresh">Screened within 1 year</span></label>
+            <label class="chk"><input type="checkbox" value="givenName" /> <span data-i18n="chk_given">Given name</span></label>
+            <label class="chk"><input type="checkbox" value="familyName" /> <span data-i18n="chk_family">Family name</span></label>
+            <label class="chk"><input type="checkbox" value="nationality" /> <span data-i18n="chk_nationality">Nationality</span></label>
+            <label class="chk"><input type="checkbox" value="dateOfBirth" /> <span data-i18n="chk_dob">Date of birth</span></label>
+            <label class="chk"><input type="checkbox" value="passportNumber" /> <span data-i18n="chk_docnum">Document number</span></label>
+          </div>
+        </div>
+
+        <div class="field">
+          <span data-i18n="merchant_verification">Merchant verification</span>
+          <p class="hint" id="merchantStatus" data-i18n="checking">Checking…</p>
+          <div class="merchant-id-row" id="merchantIdRow" style="display:none">
+            <code class="merchant-id" id="merchantId"></code>
+            <button type="button" id="copyMerchantId" class="copy-btn" data-i18n="copy" data-i18n-aria="aria_copy_merchant" aria-label="Copy merchant ID">Copy</button>
+          </div>
+          <a id="requestVerify" class="hint" href="#" data-i18n="request_verify" style="display:none">Email sales@elabify.com to ask about legal entity verification for a verified badge →</a>
+        </div>
+
+        <div class="sheet-actions">
+          <button id="saveSettings" class="charge-btn compact" data-i18n="done">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- receipts overlay -->
+    <div id="receiptsOverlay" class="overlay hidden">
+      <div class="sheet scroll">
+        <h2 class="sheet-title" data-i18n="receipts">Receipts</h2>
+        <div id="txList" class="tx-list"></div>
+        <div class="sheet-actions">
+          <button id="closeReceipts" class="ghost-btn" data-i18n="close">Close</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

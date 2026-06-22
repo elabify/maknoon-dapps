@@ -206,14 +206,14 @@ function renderAmount() {
   const rate = effectiveRate();
   const ticker = displayTicker();
   $("#unit").textContent = state.inputIsFiat ? fiatSymbol(state.fiatCode) : "";
-  $("#amountLabel").textContent = state.inputIsFiat ? `Amount (${state.fiatCode})` : `Amount (${ticker})`;
+  $("#amountLabel").textContent = t("amount_with", { unit: state.inputIsFiat ? state.fiatCode : ticker });
   // Show exactly what's being typed (so "0.005" shows the dot + zeros live);
   // the parsed value drives the equivalent + charge logic below.
   $("#amount").textContent = state.digits;
 
   let equiv;
   if (rate == null) {
-    equiv = "no rate on this network";
+    equiv = t("no_rate");
   } else if (state.inputIsFiat) {
     equiv = `≈ ${fmt(a.crypto, isLightning() ? 0 : 6)} ${ticker}`;
   } else {
@@ -231,13 +231,13 @@ function renderReceiveLine() {
   const el = $("#receiveLine");
   if (!el) return;
   if (!state.address) {
-    el.textContent = `No ${esc(fam().label)} wallet. Set one up in Maknoon first.`;
+    el.textContent = t("no_wallet_setup", { family: fam().label });
     return;
   }
   if (isLightning()) {
-    el.innerHTML = `Receiving on <b>Bitcoin Lightning</b> → <b>${esc(state.addressName || "Lightning wallet")}</b>`;
+    el.innerHTML = `${esc(t("receiving_on"))} <b>${esc(fam().label)}</b> → <b>${esc(state.addressName || t("lightning_wallet"))}</b>`;
   } else {
-    el.innerHTML = `Receiving on ${esc(net().label)} → <b>${esc(state.addressName || "wallet")}</b> <span class="addr">${esc(short(state.address))}</span>`;
+    el.innerHTML = `${esc(t("receiving_on"))} ${esc(net().label)} → <b>${esc(state.addressName || t("wallet"))}</b> <span class="addr">${esc(short(state.address))}</span>`;
   }
 }
 
@@ -369,8 +369,8 @@ async function runCharge() {
   $("#resultBox").className = "result-box hidden";
   setStep("verify", "active", "…");
   setStep("pay", "", "…");
-  $("#verifyDetail").textContent = badgeFor({}) === "Sanctions clear"
-    ? "Sanctions-clean, within 12 months" : "Passport identity";
+  $("#verifyDetail").textContent = badgeKey({}) === "badge_sanctions_clear"
+    ? t("verify_sanctions_detail") : t("verify_passport_detail");
 
   // Single-tap unified verify-and-pay (ADR-0031) for EVM rails: one native
   // sheet collects identity + the holder's signed payment and the wallet
@@ -408,29 +408,29 @@ async function runCharge() {
         lane: "full",
       });
     } catch (e) {
-      setStep("verify", "bad", "Cancelled");
-      return result("bad", `<h3>Cancelled</h3><p>${esc(e.message || "")}</p>`);
+      setStep("verify", "bad", t("cancelled"));
+      return result("bad", `<h3>${esc(t("cancelled"))}</h3><p>${esc(e.message || "")}</p>`);
     }
     if (v.decision !== "GRANT") {
-      setStep("verify", "bad", "Denied");
+      setStep("verify", "bad", t("denied"));
       const missing = Array.isArray(v.missing) ? v.missing : [];
       const hint = missing.length
-        ? `<p>Customer must also share: <strong>${esc(missing.join(", "))}</strong></p>` : "";
-      return result("bad", `<h3>Payment blocked</h3><p>${esc(v.message || reasonText(v.reason))}</p>${hint}`);
+        ? `<p>${esc(t("must_also_share"))}<strong>${esc(missing.join(", "))}</strong></p>` : "";
+      return result("bad", `<h3>${esc(t("payment_blocked"))}</h3><p>${esc(v.message || reasonText(v.reason))}</p>${hint}`);
     }
-    setStep("verify", "ok", "Verified");
-    setStep("pay", "ok", v.txHash ? "Received" : "Authorized");
+    setStep("verify", "ok", t("verified"));
+    setStep("pay", "ok", v.txHash ? t("received") : t("authorized"));
     const fiatText = a.fiat != null ? `${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
     await appendTx({
       at: new Date().toISOString(), chain: net().chain, network: net().network,
       ticker: displayTicker(), crypto: trimFloat(a.crypto), fiatText,
-      badge: badgeFor(v), attrs: v.disclosed || {}, txHash: v.txHash || null,
+      badge: badgeKey(v), attrs: v.disclosed || {}, txHash: v.txHash || null,
     });
     result("ok",
-      `<h3>Verified &amp; paid</h3>
+      `<h3>${esc(t("verified_and_paid"))}</h3>
        <p>${esc(trimFloat(a.crypto))} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
-       <p><span class="tx-badge">${esc(badgeFor(v))}</span></p>
-       ${txLink(net().chain, net().network, v.txHash, "authorized")}`);
+       <p><span class="tx-badge">${esc(t(badgeKey(v)))}</span></p>
+       ${txLink(net().chain, net().network, v.txHash, t("tx_authorized"))}`);
     state.digits = "0"; renderAmount();
     return;
   }
@@ -440,22 +440,22 @@ async function runCharge() {
   try {
     verdict = await window.maknoon.identity.collect(captureRequest());
   } catch (e) {
-    setStep("verify", "bad", "Cancelled");
-    return result("bad", `<h3>Verification cancelled</h3><p>${esc(e.message || "")}</p>`);
+    setStep("verify", "bad", t("cancelled"));
+    return result("bad", `<h3>${esc(t("verification_cancelled"))}</h3><p>${esc(e.message || "")}</p>`);
   }
   if (verdict.decision !== "GRANT") {
-    setStep("verify", "bad", "Denied");
+    setStep("verify", "bad", t("denied"));
     // The wallet now returns a specific human `message` (which attributes are
     // missing vs shared) and a `missing` list; prefer them over the generic map.
     const msg = verdict.message || reasonText(verdict.reason);
     const missing = Array.isArray(verdict.missing) ? verdict.missing : [];
     const hint = missing.length
-      ? `<p>Customer must also share: <strong>${esc(missing.join(", "))}</strong></p>`
+      ? `<p>${esc(t("must_also_share"))}<strong>${esc(missing.join(", "))}</strong></p>`
       : "";
-    return result("bad", `<h3>Payment blocked</h3><p>${esc(msg)}</p>${hint}`);
+    return result("bad", `<h3>${esc(t("payment_blocked"))}</h3><p>${esc(msg)}</p>${hint}`);
   }
-  const badge = badgeFor(verdict);
-  setStep("verify", "ok", "Verified");
+  const badge = badgeKey(verdict);
+  setStep("verify", "ok", t("verified"));
 
   // 2. Receive payment.
   setStep("pay", "active", "…");
@@ -478,10 +478,10 @@ async function runCharge() {
       },
     });
   } catch (e) {
-    setStep("pay", "bad", "Cancelled");
-    return result("bad", `<h3>Payment not completed</h3><p>${esc(e.message || "")}</p>`);
+    setStep("pay", "bad", t("cancelled"));
+    return result("bad", `<h3>${esc(t("payment_not_completed"))}</h3><p>${esc(e.message || "")}</p>`);
   }
-  setStep("pay", "ok", "Received");
+  setStep("pay", "ok", t("received"));
 
   const entry = {
     at: new Date().toISOString(),
@@ -492,28 +492,37 @@ async function runCharge() {
   await appendTx(entry);
 
   result("ok",
-    `<h3>Payment received</h3>
+    `<h3>${esc(t("payment_received"))}</h3>
      <p>${esc(entry.crypto)} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
-     <p><span class="tx-badge">${esc(badge)}</span></p>
-     ${txLink(net().chain, net().network, pay.txHash, "confirmed")}`);
+     <p><span class="tx-badge">${esc(t(badge))}</span></p>
+     ${txLink(net().chain, net().network, pay.txHash, t("tx_confirmed"))}`);
   // Reset entry for the next sale.
   state.digits = "0"; renderAmount();
 }
 
-function badgeFor(v) {
+// Returns a stable i18n key (not a localized string) so the badge can be stored
+// in the receipt log and re-translated whenever the language changes.
+function badgeKey(v) {
   const checks = state.verifyChecks;
   const hasPII = PII_CLAIMS.some((c) => checks.includes(c));
   const sanctionsOnly = checks.includes("sdnScreen") && checks.includes("screenFresh") && !hasPII;
-  return sanctionsOnly ? "Sanctions clear" : "Identity verified";
+  return sanctionsOnly ? "badge_sanctions_clear" : "badge_identity_verified";
+}
+// A stored receipt badge is either an i18n key (new receipts) or a raw English
+// string (receipts logged before localization); translate the former, pass the
+// latter through unchanged.
+function badgeText(stored) {
+  if (!stored) return t("badge_verified_default");
+  return (I18N.en[stored] != null) ? t(stored) : stored;
 }
 function reasonText(r) {
   return ({
-    no_matching_credential: "Customer has no matching credential.",
-    missing_claims: "Customer did not disclose the required details.",
-    stale_screening: "The sanctions screening is older than 12 months.",
-    wrong_schema: "Customer presented the wrong credential type.",
-    verification_failed: "The credential failed verification.",
-  }[r] || ("Verifier decision: " + (r || "denied")));
+    no_matching_credential: t("reason_no_matching"),
+    missing_claims: t("reason_missing_claims"),
+    stale_screening: t("reason_stale"),
+    wrong_schema: t("reason_wrong_schema"),
+    verification_failed: t("reason_verification_failed"),
+  }[r] || t("reason_generic", { reason: r || "denied" }));
 }
 
 // --- settings UI ----------------------------------------------------------
@@ -624,8 +633,8 @@ async function populateChains() {
   // family has only one bucket, render the flat list (no empty group label).
   if (mains.length && tests.length) {
     sel.innerHTML =
-      `<optgroup label="Mainnet">${mains.map((x) => opt(x.c, x.i)).join("")}</optgroup>` +
-      `<optgroup label="Testnet">${tests.map((x) => opt(x.c, x.i)).join("")}</optgroup>`;
+      `<optgroup label="${esc(t("optgroup_mainnet"))}">${mains.map((x) => opt(x.c, x.i)).join("")}</optgroup>` +
+      `<optgroup label="${esc(t("optgroup_testnet"))}">${tests.map((x) => opt(x.c, x.i)).join("")}</optgroup>`;
   } else {
     sel.innerHTML = state.chains.map((c, i) => opt(c, i)).join("");
   }
@@ -671,14 +680,14 @@ async function populateAssets() {
   assets.forEach((x) => {
     const o = document.createElement("option");
     o.value = key(x);
-    o.textContent = x.kind === "native" ? `${x.symbol} (native)` : `${x.symbol}${x.name && x.name !== x.symbol ? " (" + x.name + ")" : ""}`;
+    o.textContent = x.kind === "native" ? `${x.symbol} (${t("native_suffix")})` : `${x.symbol}${x.name && x.name !== x.symbol ? " (" + x.name + ")" : ""}`;
     o._asset = x.kind === "native" ? null : x;   // null => native default
     sel.appendChild(o);
   });
   const match = cur && assets.find((x) => key(x) === key(cur));
   if (match) { state.asset = match.kind === "native" ? null : match; sel.value = key(match); }
   else { state.asset = null; sel.value = key(assets[0]); }
-  if (hint) hint.textContent = assets.length > 1 ? "Pick which asset to receive." : "Receiving the native coin.";
+  if (hint) hint.textContent = assets.length > 1 ? t("asset_hint") : t("receiving_native");
 }
 
 async function openSettings() {
@@ -723,7 +732,7 @@ $("#copyMerchantId").addEventListener("click", async (e) => {
   if (!did) return;
   const ok = await copyText(did);
   const btn = e.currentTarget, prev = btn.textContent;
-  btn.textContent = ok ? "Copied" : "Copy failed";
+  btn.textContent = ok ? t("copied") : t("copy_failed");
   setTimeout(() => { btn.textContent = prev; }, 1500);
 });
 
@@ -735,7 +744,7 @@ async function renderMerchant() {
   try {
     const id = await window.maknoon.merchant.getIdentity();
     const verified = !!id.verified;
-    statusEl.textContent = verified ? "✓ Verified merchant" : "Self-signed (not yet verified)";
+    statusEl.textContent = verified ? t("merchant_verified") : t("merchant_selfsigned");
     statusEl.style.color = verified ? "#2ecc71" : "#e67e22";
     idEl.textContent = id.did || "";
     idRow.style.display = id.did ? "flex" : "none";
@@ -743,11 +752,9 @@ async function renderMerchant() {
       link.style.display = "none";
     } else {
       link.style.display = "block";
-      const name = $("#storeName").value || "Merchant";
-      const subject = encodeURIComponent("Maknoon merchant verification request");
-      const body = encodeURIComponent(
-        "Please register this merchant as a verified verifier:\n\n" +
-        "Name: " + name + "\nVerifier DID: " + (id.did || "") + "\nPublic key: " + (id.publicKey || ""));
+      const name = $("#storeName").value || t("merchant_default");
+      const subject = encodeURIComponent(t("verify_email_subject"));
+      const body = encodeURIComponent(t("verify_email_body", { name, did: id.did || "", pk: id.publicKey || "" }));
       link.href = "mailto:sales@elabify.com?subject=" + subject + "&body=" + body;
     }
   } catch (e) { statusEl.textContent = ""; idRow.style.display = "none"; }
@@ -770,8 +777,8 @@ async function populateAddresses() {
   } catch (e) { list = []; }
 
   if (!list.length) {
-    sel.innerHTML = `<option value="">No ${esc(fam().label)} wallet</option>`;
-    $("#addressHint").textContent = `Set up a ${fam().label} wallet in Maknoon first, then reopen.`;
+    sel.innerHTML = `<option value="">${esc(t("no_wallet_option", { family: fam().label }))}</option>`;
+    $("#addressHint").textContent = t("setup_wallet_reopen", { family: fam().label });
     state.address = null; state.addressName = null;
     renderReceiveLine();
     return;
@@ -779,7 +786,7 @@ async function populateAddresses() {
 
   sel.innerHTML = list.map((e) => {
     const suffix = isLightning() ? "" : ` (${short(e.address)})`;
-    return `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet && !isLightning() ? " (my wallet)" : ""}${suffix}</option>`;
+    return `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet && !isLightning() ? " (" + esc(t("label_my_wallet")) + ")" : ""}${suffix}</option>`;
   }).join("");
   if (!state.address || !list.some((e) => e.address === state.address)) {
     state.address = list[0].address;
@@ -789,9 +796,7 @@ async function populateAddresses() {
     const cur = list.find((e) => e.address === state.address);
     if (cur) state.addressName = cur.name;
   }
-  $("#addressHint").textContent = isLightning()
-    ? "Pick which Lightning wallet receives."
-    : "Pick one of your wallets or saved addresses.";
+  $("#addressHint").textContent = isLightning() ? t("pick_lightning") : t("addr_hint");
   renderReceiveLine();
 }
 
@@ -806,37 +811,38 @@ function syncVerifyChecks() {
 $("#receiptsBtn").addEventListener("click", async () => {
   const list = await loadTx();
   const el = $("#txList");
-  el.innerHTML = list.length ? list.map(txRow).join("") : `<div class="tx-empty">No sales yet.</div>`;
+  el.innerHTML = list.length ? list.map(txRow).join("") : `<div class="tx-empty">${esc(t("no_sales"))}</div>`;
   $("#receiptsOverlay").classList.remove("hidden");
 });
 $("#closeReceipts").addEventListener("click", () => $("#receiptsOverlay").classList.add("hidden"));
 
+// Disclosed-claim labels as i18n keys (translated at render time).
 const ATTR_LABELS = {
-  sdnScreen: "Sanctions", givenName: "Given name", familyName: "Family name",
-  nationality: "Nationality", dateOfBirth: "Date of birth", passportNumber: "Document number",
+  sdnScreen: "attr_sanctions", givenName: "chk_given", familyName: "chk_family",
+  nationality: "chk_nationality", dateOfBirth: "chk_dob", passportNumber: "chk_docnum",
 };
 // Human text for one disclosed claim value (sdnScreen is an object).
 function attrText(key, value) {
   if (key === "sdnScreen" && value && typeof value === "object") {
     const r = value.result || "?";
     const at = String(value.screenedAt || "").slice(0, 10);
-    return at ? `${r} (screened ${at})` : r;
+    return at ? `${r} (${t("screened_at", { date: at })})` : r;
   }
   if (value && typeof value === "object") return JSON.stringify(value);
   return String(value == null ? "" : value);
 }
-function txRow(t) {
-  const when = new Date(t.at).toLocaleString();
-  const attrs = t.attrs || {};
+function txRow(tx) {
+  const when = new Date(tx.at).toLocaleString();
+  const attrs = tx.attrs || {};
   const attrRows = Object.keys(attrs).map((k) =>
-    `<div class="tx-attr"><span>${esc(ATTR_LABELS[k] || k)}</span><span>${esc(attrText(k, attrs[k]))}</span></div>`,
+    `<div class="tx-attr"><span>${esc(ATTR_LABELS[k] ? t(ATTR_LABELS[k]) : k)}</span><span>${esc(attrText(k, attrs[k]))}</span></div>`,
   ).join("");
   // Settlement ref as a tappable block-explorer link (opens in the device browser).
-  const link = t.txHash ? txLink(t.chain, t.network, t.txHash, "") : "";
+  const link = tx.txHash ? txLink(tx.chain, tx.network, tx.txHash, "") : "";
   return `<div class="tx-row">
-    <div class="tx-top"><span class="tx-amt">${esc(t.crypto)} ${esc(t.ticker)}</span>
-      <span class="tx-badge">${esc(t.badge || "verified")}</span></div>
-    <div class="tx-meta"><span>${esc(when)}</span><span class="tx-fiat">${esc(t.fiatText || "")}</span></div>
+    <div class="tx-top"><span class="tx-amt">${esc(tx.crypto)} ${esc(tx.ticker)}</span>
+      <span class="tx-badge">${esc(badgeText(tx.badge))}</span></div>
+    <div class="tx-meta"><span>${esc(when)}</span><span class="tx-fiat">${esc(tx.fiatText || "")}</span></div>
     ${attrRows ? `<div class="tx-attrs">${attrRows}</div>` : ""}
     ${link}
   </div>`;
@@ -851,8 +857,20 @@ function esc(s) {
 
 // --- boot -----------------------------------------------------------------
 (async function boot() {
+  // Resolve the UI language from the host's selected app locale (falls back to
+  // English), set <html lang/dir> (rtl for Arabic), then fill the static strings.
+  let locale = "en";
+  try {
+    const info = await window.maknoon.device.info();
+    locale = (info && info.locale) || "en";
+  } catch (e) { /* no host / older host -> English */ }
+  window.__posLang = normLocale(locale);
+  document.documentElement.lang = window.__posLang;
+  document.documentElement.dir = (window.__posLang === "ar") ? "rtl" : "ltr";
+  applyStaticI18n();
+
   if (!has()) {
-    $("#equivalent").textContent = "open inside Maknoon";
+    $("#equivalent").textContent = t("open_inside");
     return;
   }
   await loadSettings();
