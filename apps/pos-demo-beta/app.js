@@ -14,6 +14,10 @@
 
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 const ONE_YEAR = 365 * 24 * 60 * 60;
+// Chains whose native Verify & Pay (commerce.collectAndCharge) sheet is wired
+// end to end. Others fall through to the two-step identity.collect +
+// payment.receive flow until their settlement lands.
+const COMMERCE_CHAINS = ["ethereum", "solana", "tron", "bitcoin", "lightning"];
 
 // Networks (the coin/chain family) and their chains (sub-networks). The chain
 // dropdown is normally populated from the wallet's canonical ordered list via
@@ -329,7 +333,10 @@ function txLink(chain, network, txHash, fallbackLabel) {
 }
 
 // PII claims the merchant can optionally request, in display order.
-const PII_CLAIMS = ["givenName", "familyName", "nationality", "dateOfBirth", "documentNumber"];
+// NB: the passport VC keys the document number as `passportNumber` (the issuer
+// schema), so the merchant must request that key, not "documentNumber", or the
+// match fails ("no matching credential"). The UI label stays "Document number".
+const PII_CLAIMS = ["givenName", "familyName", "nationality", "dateOfBirth", "passportNumber"];
 
 // Map the always-visible verifyChecks list to a single Passport request.
 // `sdnScreen` rides the passport's own built-in screening result (the
@@ -368,18 +375,23 @@ async function runCharge() {
   // Single-tap unified verify-and-pay (ADR-0031) for EVM rails: one native
   // sheet collects identity + the holder's signed payment and the wallet
   // broadcasts. Non-EVM networks fall through to the two-step flow below.
-  if (net().chain === "ethereum" && window.maknoon.commerce) {
-    // No RPC here on purpose: the wallet resolves the endpoint from the Maknoon
-    // user's own Ethereum network settings, the same ones the wallet uses.
-    // The chosen asset parameterizes the native rail: symbol + decimals always,
-    // and a token contract when the merchant picked an ERC-20 (USDC/USDT/held).
-    // The host degrades to the native coin if it ignores the contract.
+  if (COMMERCE_CHAINS.includes(net().chain) && window.maknoon.commerce) {
+    // Unified verify+pay for every chain whose native commerce sheet is wired
+    // (EVM + Solana today; Tron/Bitcoin/Lightning fall through to the two-step
+    // flow until their settlement lands). No RPC here on purpose: the wallet
+    // resolves the endpoint from the Maknoon user's own network settings.
+    // The chosen asset parameterizes the rail: symbol + decimals always, and a
+    // token contract (ERC-20) / mint (SPL) under `assetContract` (the field the
+    // host reads); the host degrades to the native coin if it ignores it.
     const as = asset();
     const rail = {
-      chain: "ethereum", network: net().network, asset: as.symbol,
+      chain: net().chain, network: net().network, asset: as.symbol,
       address: state.address, amount: trimFloat(a.crypto), assetDecimals: as.decimals,
     };
-    if (as.kind !== "native" && as.contract) rail.contract = as.contract;
+    if (as.kind !== "native") {
+      const c = as.contract || as.mint;
+      if (c) rail.assetContract = c;
+    }
     // Pass our own (live) store name so the customer sees it instead of the
     // catalog title. The dApp owns its name (window.maknoon.storage).
     let merchantName = "";
@@ -410,7 +422,7 @@ async function runCharge() {
     setStep("pay", "ok", v.txHash ? "Received" : "Authorized");
     const fiatText = a.fiat != null ? `${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
     await appendTx({
-      at: new Date().toISOString(), chain: "ethereum", network: net().network,
+      at: new Date().toISOString(), chain: net().chain, network: net().network,
       ticker: displayTicker(), crypto: trimFloat(a.crypto), fiatText,
       badge: badgeFor(v), attrs: v.disclosed || {}, txHash: v.txHash || null,
     });
@@ -418,7 +430,7 @@ async function runCharge() {
       `<h3>Verified &amp; paid</h3>
        <p>${esc(trimFloat(a.crypto))} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
        <p><span class="tx-badge">${esc(badgeFor(v))}</span></p>
-       ${txLink("ethereum", net().network, v.txHash, "authorized")}`);
+       ${txLink(net().chain, net().network, v.txHash, "authorized")}`);
     state.digits = "0"; renderAmount();
     return;
   }
@@ -799,12 +811,34 @@ $("#receiptsBtn").addEventListener("click", async () => {
 });
 $("#closeReceipts").addEventListener("click", () => $("#receiptsOverlay").classList.add("hidden"));
 
+const ATTR_LABELS = {
+  sdnScreen: "Sanctions", givenName: "Given name", familyName: "Family name",
+  nationality: "Nationality", dateOfBirth: "Date of birth", passportNumber: "Document number",
+};
+// Human text for one disclosed claim value (sdnScreen is an object).
+function attrText(key, value) {
+  if (key === "sdnScreen" && value && typeof value === "object") {
+    const r = value.result || "?";
+    const at = String(value.screenedAt || "").slice(0, 10);
+    return at ? `${r} (screened ${at})` : r;
+  }
+  if (value && typeof value === "object") return JSON.stringify(value);
+  return String(value == null ? "" : value);
+}
 function txRow(t) {
   const when = new Date(t.at).toLocaleString();
+  const attrs = t.attrs || {};
+  const attrRows = Object.keys(attrs).map((k) =>
+    `<div class="tx-attr"><span>${esc(ATTR_LABELS[k] || k)}</span><span>${esc(attrText(k, attrs[k]))}</span></div>`,
+  ).join("");
+  // Settlement ref as a tappable block-explorer link (opens in the device browser).
+  const link = t.txHash ? txLink(t.chain, t.network, t.txHash, "") : "";
   return `<div class="tx-row">
     <div class="tx-top"><span class="tx-amt">${esc(t.crypto)} ${esc(t.ticker)}</span>
       <span class="tx-badge">${esc(t.badge || "verified")}</span></div>
     <div class="tx-meta"><span>${esc(when)}</span><span class="tx-fiat">${esc(t.fiatText || "")}</span></div>
+    ${attrRows ? `<div class="tx-attrs">${attrRows}</div>` : ""}
+    ${link}
   </div>`;
 }
 
