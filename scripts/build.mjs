@@ -26,14 +26,10 @@ const CATALOG_PATH = join(ROOT, "catalog.json");
 // wallets to re-download). `channel` is the release track (beta|stable).
 // `requiresMaknoon` is the minimum Maknoon app version the dApp targets.
 const APP_META = {
+  // Single Point of Sale app (the former pos-demo + pos-demo-beta, merged). Stays
+  // on the beta channel; carries the all-chains Verify & Pay + asset picker, so it
+  // needs the wallet capability and Maknoon >= 0.6.0.
   "pos-demo": {
-    version: "0.1.3", entry: "index.html", channel: "beta", requiresMaknoon: "0.4.1",
-    capabilities: [
-      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
-      { name: "payment", reason: "Receive payments and pick a receiving address" },
-    ],
-  },
-  "pos-demo-beta": {
     version: "0.1.4", entry: "index.html", channel: "beta", requiresMaknoon: "0.6.0",
     capabilities: [
       { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },

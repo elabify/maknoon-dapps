@@ -9,34 +9,6 @@
       "id": "pos-demo",
       "title": "Point of Sale",
       "summary": "Verify a customer and accept payments.",
-      "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, or passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book, auto-detected on-chain. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
-      "iconName": "creditcard.fill",
-      "statusLabel": "Stable",
-      "curatedBy": "Elabify",
-      "version": "0.1.3",
-      "channel": "beta",
-      "requiresMaknoonVersion": "0.4.1",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
-      "manifestSha256": "d0d1269279d015582b4e614888e459960425ff420826928e957d4b176adb3ba2",
-      "permissions": [
-        "identity",
-        "payment"
-      ],
-      "capabilities": [
-        {
-          "name": "identity",
-          "reason": "Verify each customer holds a sanctions-clean credential"
-        },
-        {
-          "name": "payment",
-          "reason": "Receive payments and pick a receiving address"
-        }
-      ]
-    },
-    {
-      "id": "pos-demo-beta",
-      "title": "Point of Sale (Beta)",
-      "summary": "Verify a customer and accept payments.",
       "details": "A merchant point-of-sale terminal. Enter an amount in fiat or crypto, verify the customer cross-device (a sanctions-clean Musnad credential within 12 months by default, plus optional passport attributes), then receive payment on the network you choose (EVM, Bitcoin, Solana, or Tron) to an address from your address book. On Ethereum, Solana, and Tron you can pick which asset to receive (the native coin, USDC, USDT, or a token your wallet holds); Bitcoin and Lightning receive the native coin. Keeps a receipt log with the fiat value at time of sale and a trusted badge.",
       "iconName": "creditcard.fill",
       "statusLabel": "Beta",
@@ -44,7 +16,7 @@
       "version": "0.1.4",
       "channel": "beta",
       "requiresMaknoonVersion": "0.6.0",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo-beta/manifest.json",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos-demo/manifest.json",
       "manifestSha256": "918d6ed3965126baf2d75bec7fc7b389f626384a259e6ce0d9024ed3f4b717fd",
       "permissions": [
         "identity",

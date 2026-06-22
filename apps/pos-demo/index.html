@@ -27,7 +27,7 @@
       <button id="flipBtn" class="flip-btn">⇄ <span id="equivalent">enter an amount</span></button>
     </section>
 
-    <div id="receiveLine" class="receive-line">No receiving wallet — open settings</div>
+    <div id="receiveLine" class="receive-line">No receiving wallet, open settings</div>
 
     <section class="keypad" id="keypad">
       <button class="key" data-k="1">1</button>
@@ -100,18 +100,23 @@
         </label>
         <p class="hint" id="addressHint">Pick one of your wallets or saved addresses.</p>
 
+        <label class="field" id="assetField">
+          <span>Asset</span>
+          <select id="assetSelect"></select>
+        </label>
+        <p class="hint" id="assetHint">Pick which asset to receive.</p>
+
         <div class="field">
           <span>Verify from customer</span>
-          <div class="seg">
-            <button class="seg-btn" data-capture="sanctions">Sanctions check</button>
-            <button class="seg-btn" data-capture="passport">Passport identity</button>
+          <div id="verifyChecks" class="attrs">
+            <label class="chk"><input type="checkbox" value="sdnScreen" checked /> Sanctions: clean</label>
+            <label class="chk"><input type="checkbox" value="screenFresh" checked /> Screened within 1 year</label>
+            <label class="chk"><input type="checkbox" value="givenName" /> Given name</label>
+            <label class="chk"><input type="checkbox" value="familyName" /> Family name</label>
+            <label class="chk"><input type="checkbox" value="nationality" /> Nationality</label>
+            <label class="chk"><input type="checkbox" value="dateOfBirth" /> Date of birth</label>
+            <label class="chk"><input type="checkbox" value="passportNumber" /> Document number</label>
           </div>
-        </div>
-        <div id="passportAttrs" class="attrs hidden">
-          <label class="chk"><input type="checkbox" value="givenName" checked /> Given name</label>
-          <label class="chk"><input type="checkbox" value="familyName" checked /> Family name</label>
-          <label class="chk"><input type="checkbox" value="nationality" checked /> Nationality</label>
-          <label class="chk"><input type="checkbox" value="dateOfBirth" /> Date of birth</label>
         </div>
 
         <div class="field">

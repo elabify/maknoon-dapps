@@ -14,10 +14,16 @@
 
 const PASSPORT_SCHEMA = "elabify://schema/global/passport/v1";
 const ONE_YEAR = 365 * 24 * 60 * 60;
+// Chains whose native Verify & Pay (commerce.collectAndCharge) sheet is wired
+// end to end. Others fall through to the two-step identity.collect +
+// payment.receive flow until their settlement lands.
+const COMMERCE_CHAINS = ["ethereum", "solana", "tron", "bitcoin", "lightning"];
 
-// Networks (the coin/chain family) and their chains (sub-networks).
-// rawValues match the native enums.
-// Listed alphabetically by label.
+// Networks (the coin/chain family) and their chains (sub-networks). The chain
+// dropdown is normally populated from the wallet's canonical ordered list via
+// window.maknoon.wallet.getNetworks; this hardcoded table is the fallback for
+// older hosts and the source of per-network tickers (e.g. Polygon -> POL).
+// `network` values match the native enums. Families listed alphabetically.
 const FAMILIES = [
   { chain: "bitcoin", label: "Bitcoin", chains: [
     { network: "mainnet",  label: "Mainnet", ticker: "BTC" },
@@ -50,23 +56,49 @@ const state = {
   digits: "0",          // raw entry string
   inputIsFiat: true,    // fiat-first by default
   famIndex: 0,          // selected network family
-  chainIndex: 0,        // selected chain within the family
+  chainIndex: 0,        // selected chain within the family (index into state.chains)
+  // The active chain list for the current family. Populated from the wallet's
+  // canonical ordered network list (window.maknoon.wallet.getNetworks); falls
+  // back to the family's hardcoded `chains` on older hosts. Each entry:
+  // { network, label, ticker, isTestnet }.
+  chains: [],
   address: null,
   addressName: null,
-  capture: "sanctions", // or "passport"
-  passportAttrs: ["givenName", "familyName", "nationality"],
+  // Which asset to receive. Defaults to the native coin of the family.
+  // { symbol, contract|mint|null, decimals, kind: native|erc20|spl|trc20 }
+  asset: null,
+  // The customer attributes/predicates to verify. sdnScreen + screenFresh are
+  // the sanctions defaults; the rest are optional PII.
+  verifyChecks: ["sdnScreen", "screenFresh"],
   rate: null,           // fiat per 1 coin (null => no fiat)
   fiatCode: "USD",
 };
 
 function fam() { return FAMILIES[state.famIndex]; }
 function isLightning() { return fam().chain === "lightning"; }
+function isBitcoinFamily() { return fam().chain === "bitcoin" || fam().chain === "lightning"; }
+// The active chain list: the wallet-provided list once populated, otherwise the
+// family's hardcoded fallback (used at boot before populateChains has run).
+function chainList() {
+  return (state.chains && state.chains.length) ? state.chains : fam().chains;
+}
 // Flattened current selection: { chain, network, ticker, label }.
 function net() {
   const f = fam();
-  const c = f.chains[state.chainIndex] || f.chains[0];
+  const list = chainList();
+  const c = list[state.chainIndex] || list[0];
   return { chain: f.chain, network: c.network, ticker: c.ticker, label: `${f.label} · ${c.label}` };
 }
+
+// The native asset descriptor for the current family (the default selection).
+// Native decimals per family: BTC/Lightning 8, ETH 18, SOL 9, TRON 6.
+function nativeAsset() {
+  const n = net();
+  const decimals = { bitcoin: 8, lightning: 8, ethereum: 18, solana: 9, tron: 6 }[n.chain] ?? 18;
+  return { symbol: n.ticker, contract: null, mint: null, decimals, kind: "native" };
+}
+// The currently selected asset, falling back to native.
+function asset() { return state.asset || nativeAsset(); }
 
 // --- persistence ----------------------------------------------------------
 async function loadSettings() {
@@ -77,13 +109,17 @@ async function loadSettings() {
       const fi = FAMILIES.findIndex((f) => f.chain === s.chain);
       if (fi >= 0) {
         state.famIndex = fi;
+        // Remember the desired network id; the real index is resolved once
+        // populateChains() has the wallet's ordered list (which may differ from
+        // the hardcoded fallback order). Fall back to the hardcoded index now.
+        state.networkId = s.network || null;
         const ci = FAMILIES[fi].chains.findIndex((c) => c.network === s.network);
         state.chainIndex = ci >= 0 ? ci : 0;
       }
       state.address = s.address || null;
       state.addressName = s.addressName || null;
-      state.capture = s.capture || "sanctions";
-      if (Array.isArray(s.passportAttrs)) state.passportAttrs = s.passportAttrs;
+      state.asset = s.asset || null;
+      if (Array.isArray(s.verifyChecks) && s.verifyChecks.length) state.verifyChecks = s.verifyChecks;
     }
   } catch (e) { /* defaults */ }
 }
@@ -91,7 +127,7 @@ async function saveSettings() {
   const s = {
     chain: net().chain, network: net().network,
     address: state.address, addressName: state.addressName,
-    capture: state.capture, passportAttrs: state.passportAttrs,
+    asset: state.asset, verifyChecks: state.verifyChecks,
   };
   try { await window.maknoon.storage.setItem("settings", JSON.stringify(s)); } catch (e) {}
 }
@@ -114,32 +150,51 @@ async function refreshRate() {
     state.fiatCode = q.fiatCode || "USD";
     state.rate = (typeof q.rate === "number") ? q.rate : null;
   } catch (e) {}
-  // No rate (e.g. testnet) -> force crypto entry.
-  if (state.rate == null) state.inputIsFiat = false;
+  // No rate (e.g. testnet) -> force crypto entry. A USD stablecoin still has an
+  // effective rate (~= 1.0), so fiat entry stays available there.
+  if (effectiveRate() == null) state.inputIsFiat = false;
   renderAmount();
 }
 
 function enteredNumber() { return parseFloat(state.digits || "0") || 0; }
 
+// Is the chosen asset a USD-pegged stablecoin?
+function isStable() {
+  const sym = asset().symbol;
+  return asset().kind !== "native" && (sym === "USDC" || sym === "USDT");
+}
+
+// The fiat-per-1-unit rate used for conversion. For a USD stablecoin priced in
+// USD we treat it as ~= 1.0 (documented simplification; real PoS would quote a
+// live peg). Otherwise it is the native coin rate from the fiat quote.
+function effectiveRate() {
+  if (isStable() && state.fiatCode === "USD") return 1.0;
+  return state.rate;
+}
+
+// The ticker shown for the crypto leg (the chosen asset, or the native coin).
+function displayTicker() { return asset().symbol || net().ticker; }
+
 // Returns { crypto, fiat } numeric amounts for the current entry.
 // For Lightning, `crypto` is in sats (the rate is fiat-per-BTC).
 function amounts() {
   const v = enteredNumber();
+  const rate = effectiveRate();
   if (isLightning()) {
     if (state.inputIsFiat) {
-      const sats = state.rate ? Math.round((v / state.rate) * 1e8) : 0;
+      const sats = rate ? Math.round((v / rate) * 1e8) : 0;
       return { fiat: v, crypto: sats };
     } else {
       const sats = Math.round(v);
-      const fiat = state.rate ? (sats / 1e8) * state.rate : null;
+      const fiat = rate ? (sats / 1e8) * rate : null;
       return { fiat, crypto: sats };
     }
   }
   if (state.inputIsFiat) {
-    const crypto = state.rate ? v / state.rate : 0;
+    const crypto = rate ? v / rate : 0;
     return { fiat: v, crypto };
   } else {
-    const fiat = state.rate ? v * state.rate : null;
+    const fiat = rate ? v * rate : null;
     return { fiat, crypto: v };
   }
 }
@@ -148,22 +203,24 @@ function fmt(n, dp) { return (n || 0).toLocaleString(undefined, { maximumFractio
 
 function renderAmount() {
   const a = amounts();
+  const rate = effectiveRate();
+  const ticker = displayTicker();
   $("#unit").textContent = state.inputIsFiat ? fiatSymbol(state.fiatCode) : "";
-  $("#amountLabel").textContent = state.inputIsFiat ? `Amount (${state.fiatCode})` : `Amount (${net().ticker})`;
+  $("#amountLabel").textContent = state.inputIsFiat ? `Amount (${state.fiatCode})` : `Amount (${ticker})`;
   // Show exactly what's being typed (so "0.005" shows the dot + zeros live);
   // the parsed value drives the equivalent + charge logic below.
   $("#amount").textContent = state.digits;
 
   let equiv;
-  if (state.rate == null) {
+  if (rate == null) {
     equiv = "no rate on this network";
   } else if (state.inputIsFiat) {
-    equiv = `≈ ${fmt(a.crypto, isLightning() ? 0 : 6)} ${net().ticker}`;
+    equiv = `≈ ${fmt(a.crypto, isLightning() ? 0 : 6)} ${ticker}`;
   } else {
     equiv = `≈ ${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)}`;
   }
   $("#equivalent").textContent = equiv;
-  $("#flipBtn").style.visibility = (state.rate == null) ? "hidden" : "visible";
+  $("#flipBtn").style.visibility = (rate == null) ? "hidden" : "visible";
   // A receiving wallet is required (for Lightning, the chosen account).
   $("#chargeBtn").disabled = !(a.crypto > 0) || !state.address;
   $("#netChip").textContent = net().label;
@@ -174,7 +231,7 @@ function renderReceiveLine() {
   const el = $("#receiveLine");
   if (!el) return;
   if (!state.address) {
-    el.textContent = `No ${esc(fam().label)} wallet — set one up in Maknoon first.`;
+    el.textContent = `No ${esc(fam().label)} wallet. Set one up in Maknoon first.`;
     return;
   }
   if (isLightning()) {
@@ -208,7 +265,7 @@ $("#keypad").addEventListener("click", (e) => {
   const b = e.target.closest(".key"); if (b) press(b.dataset.k);
 });
 $("#flipBtn").addEventListener("click", () => {
-  if (state.rate == null) return;
+  if (effectiveRate() == null) return;
   // Convert the current value across modes so the displayed total is stable.
   const a = amounts();
   state.inputIsFiat = !state.inputIsFiat;
@@ -234,24 +291,73 @@ function result(kind, html) {
   box.innerHTML = html;
 }
 
-function captureRequest() {
-  if (state.capture === "passport") {
-    return {
-      schema: PASSPORT_SCHEMA,
-      requiredClaims: state.passportAttrs.length ? state.passportAttrs : ["givenName", "familyName"],
-      purpose: "Point-of-sale identity",
-    };
-  }
-  // Sanctions check rides the passport's own built-in screening result
-  // (the `sdnScreen` claim: { screenedAt, result, datasetVersion }). One
-  // credential (the passport) covers both identity and the sanctions gate;
-  // there is no separate sanctions VC.
-  return {
-    schema: PASSPORT_SCHEMA,
-    requiredClaims: ["sdnScreen", "givenName", "familyName"],
-    maxAgeSec: ONE_YEAR,
-    purpose: "Point-of-sale sanctions screening (passport)",
+// Block-explorer tx URL for a settled rail; null when none (e.g. Lightning,
+// or an unknown network). The Maknoon host opens external https links in the
+// device browser when tapped.
+function explorerTxUrl(chain, network, txHash) {
+  if (!txHash) return null;
+  const E = {
+    ethereum: {
+      mainnet: "https://etherscan.io/tx/",
+      sepolia: "https://sepolia.etherscan.io/tx/",
+      "arbitrum-sepolia": "https://sepolia.arbiscan.io/tx/",
+      "base-sepolia": "https://sepolia.basescan.org/tx/",
+      "optimism-sepolia": "https://sepolia-optimism.etherscan.io/tx/",
+    },
+    solana: { mainnet: "https://explorer.solana.com/tx/", devnet: "https://explorer.solana.com/tx/" },
+    tron: { mainnet: "https://tronscan.org/#/transaction/", nile: "https://nile.tronscan.org/#/transaction/" },
+    bitcoin: {
+      mainnet: "https://mempool.space/tx/",
+      testnet: "https://mempool.space/testnet/tx/",
+      testnet3: "https://mempool.space/testnet/tx/",
+      signet: "https://mempool.space/signet/tx/",
+    },
   };
+  const base = (E[chain] || {})[network];
+  if (!base) return null;
+  let url = base + encodeURIComponent(txHash);
+  if (chain === "solana" && network === "devnet") url += "?cluster=devnet";
+  return url;
+}
+
+// Render a settlement ref as a tappable explorer link when we know the
+// explorer, else plain mono text. Plain <a href> (no target) so the host's
+// nav policy routes the tap to the system browser.
+function txLink(chain, network, txHash, fallbackLabel) {
+  if (!txHash) return `<p class="mono">${esc(fallbackLabel || "—")}</p>`;
+  const url = explorerTxUrl(chain, network, txHash);
+  const short = txHash.length > 18 ? txHash.slice(0, 10) + "…" + txHash.slice(-6) : txHash;
+  return url
+    ? `<p class="mono"><a href="${esc(url)}">${esc(short)} ↗</a></p>`
+    : `<p class="mono">${esc(txHash)}</p>`;
+}
+
+// PII claims the merchant can optionally request, in display order.
+// NB: the passport VC keys the document number as `passportNumber` (the issuer
+// schema), so the merchant must request that key, not "documentNumber", or the
+// match fails ("no matching credential"). The UI label stays "Document number".
+const PII_CLAIMS = ["givenName", "familyName", "nationality", "dateOfBirth", "passportNumber"];
+
+// Map the always-visible verifyChecks list to a single Passport request.
+// `sdnScreen` rides the passport's own built-in screening result (the
+// `sdnScreen` claim: { screenedAt, result, datasetVersion }); `screenFresh`
+// gates that screening to within one year via maxAgeSec. Ticking any PII box
+// adds that claim. One credential (the passport) covers both the sanctions
+// gate and identity; there is no separate sanctions VC.
+function captureRequest() {
+  const checks = state.verifyChecks;
+  const requiredClaims = [];
+  if (checks.includes("sdnScreen")) requiredClaims.push("sdnScreen");
+  for (const c of PII_CLAIMS) { if (checks.includes(c)) requiredClaims.push(c); }
+  // Default to the sanctions claim if the merchant somehow cleared everything.
+  if (!requiredClaims.length) requiredClaims.push("sdnScreen");
+
+  const pii = PII_CLAIMS.filter((c) => checks.includes(c));
+  const purpose = pii.length ? "Point-of-sale identity" : "Point-of-sale sanctions screening (passport)";
+  const req = { schema: PASSPORT_SCHEMA, requiredClaims, purpose };
+  // Freshness only applies to the sanctions screening.
+  if (checks.includes("sdnScreen") && checks.includes("screenFresh")) req.maxAgeSec = ONE_YEAR;
+  return req;
 }
 
 async function runCharge() {
@@ -263,18 +369,29 @@ async function runCharge() {
   $("#resultBox").className = "result-box hidden";
   setStep("verify", "active", "…");
   setStep("pay", "", "…");
-  $("#verifyDetail").textContent = state.capture === "passport" ? "Passport identity" : "Sanctions-clean, within 12 months";
+  $("#verifyDetail").textContent = badgeFor({}) === "Sanctions clear"
+    ? "Sanctions-clean, within 12 months" : "Passport identity";
 
   // Single-tap unified verify-and-pay (ADR-0031) for EVM rails: one native
   // sheet collects identity + the holder's signed payment and the wallet
   // broadcasts. Non-EVM networks fall through to the two-step flow below.
-  if (net().chain === "ethereum" && window.maknoon.commerce) {
-    // No RPC here on purpose: the wallet resolves the endpoint from the Maknoon
-    // user's own Ethereum network settings, the same ones the wallet uses.
+  if (COMMERCE_CHAINS.includes(net().chain) && window.maknoon.commerce) {
+    // Unified verify+pay for every chain whose native commerce sheet is wired
+    // (EVM + Solana today; Tron/Bitcoin/Lightning fall through to the two-step
+    // flow until their settlement lands). No RPC here on purpose: the wallet
+    // resolves the endpoint from the Maknoon user's own network settings.
+    // The chosen asset parameterizes the rail: symbol + decimals always, and a
+    // token contract (ERC-20) / mint (SPL) under `assetContract` (the field the
+    // host reads); the host degrades to the native coin if it ignores it.
+    const as = asset();
     const rail = {
-      chain: "ethereum", network: net().network, asset: net().ticker,
-      address: state.address, amount: trimFloat(a.crypto), assetDecimals: 18,
+      chain: net().chain, network: net().network, asset: as.symbol,
+      address: state.address, amount: trimFloat(a.crypto), assetDecimals: as.decimals,
     };
+    if (as.kind !== "native") {
+      const c = as.contract || as.mint;
+      if (c) rail.assetContract = c;
+    }
     // Pass our own (live) store name so the customer sees it instead of the
     // catalog title. The dApp owns its name (window.maknoon.storage).
     let merchantName = "";
@@ -305,15 +422,15 @@ async function runCharge() {
     setStep("pay", "ok", v.txHash ? "Received" : "Authorized");
     const fiatText = a.fiat != null ? `${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
     await appendTx({
-      at: new Date().toISOString(), chain: "ethereum", network: net().network,
-      ticker: net().ticker, crypto: trimFloat(a.crypto), fiatText,
+      at: new Date().toISOString(), chain: net().chain, network: net().network,
+      ticker: displayTicker(), crypto: trimFloat(a.crypto), fiatText,
       badge: badgeFor(v), attrs: v.disclosed || {}, txHash: v.txHash || null,
     });
     result("ok",
       `<h3>Verified &amp; paid</h3>
-       <p>${esc(trimFloat(a.crypto))} ${esc(net().ticker)}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
+       <p>${esc(trimFloat(a.crypto))} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
        <p><span class="tx-badge">${esc(badgeFor(v))}</span></p>
-       ${v.txHash ? `<p class="mono">${esc(v.txHash)}</p>` : `<p class="mono">authorized</p>`}`);
+       ${txLink(net().chain, net().network, v.txHash, "authorized")}`);
     state.digits = "0"; renderAmount();
     return;
   }
@@ -342,8 +459,12 @@ async function runCharge() {
 
   // 2. Receive payment.
   setStep("pay", "active", "…");
-  $("#payDetail").textContent = `${net().label} · ${trimFloat(a.crypto)} ${net().ticker}`;
+  $("#payDetail").textContent = `${net().label} · ${trimFloat(a.crypto)} ${displayTicker()}`;
   const fiatText = (a.fiat != null) ? `≈ ${fiatSymbol(state.fiatCode)}${fmt(a.fiat, 2)} ${state.fiatCode}` : null;
+  // Pass the chosen asset descriptor; the host degrades to the native coin if
+  // it does not understand `asset` (older hosts) since Bitcoin/Lightning are
+  // always native and ETH/SOL/TRON carry symbol/contract|mint/decimals/kind.
+  const as = asset();
   let pay;
   try {
     pay = await window.maknoon.payment.receive(isLightning() ? {
@@ -351,6 +472,10 @@ async function runCharge() {
     } : {
       chain: net().chain, network: net().network, address: state.address,
       amount: trimFloat(a.crypto), fiatText: fiatText || undefined,
+      asset: as.kind === "native" ? undefined : {
+        symbol: as.symbol, contract: as.contract || undefined, mint: as.mint || undefined,
+        decimals: as.decimals, kind: as.kind,
+      },
     });
   } catch (e) {
     setStep("pay", "bad", "Cancelled");
@@ -360,7 +485,7 @@ async function runCharge() {
 
   const entry = {
     at: new Date().toISOString(),
-    chain: net().chain, network: net().network, ticker: net().ticker,
+    chain: net().chain, network: net().network, ticker: displayTicker(),
     crypto: trimFloat(a.crypto), fiatText, badge,
     attrs: verdict.disclosed || {}, txHash: pay.txHash || null,
   };
@@ -368,17 +493,18 @@ async function runCharge() {
 
   result("ok",
     `<h3>Payment received</h3>
-     <p>${esc(entry.crypto)} ${esc(net().ticker)}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
+     <p>${esc(entry.crypto)} ${esc(displayTicker())}${fiatText ? " (" + esc(fiatText) + ")" : ""}</p>
      <p><span class="tx-badge">${esc(badge)}</span></p>
-     ${pay.txHash ? `<p class="mono">${esc(pay.txHash)}</p>` : `<p class="mono">confirmed</p>`}`);
+     ${txLink(net().chain, net().network, pay.txHash, "confirmed")}`);
   // Reset entry for the next sale.
   state.digits = "0"; renderAmount();
 }
 
 function badgeFor(v) {
-  if (state.capture === "passport") return "Identity verified";
-  const fresh = v.checks && v.checks.fresh !== false;
-  return fresh ? "Sanctions clear" : "Sanctions verified";
+  const checks = state.verifyChecks;
+  const hasPII = PII_CLAIMS.some((c) => checks.includes(c));
+  const sanctionsOnly = checks.includes("sdnScreen") && checks.includes("screenFresh") && !hasPII;
+  return sanctionsOnly ? "Sanctions clear" : "Identity verified";
 }
 function reasonText(r) {
   return ({
@@ -400,47 +526,177 @@ $("#saveSettings").addEventListener("click", async () => {
 $("#networkSelect").addEventListener("change", async (e) => {
   state.famIndex = parseInt(e.target.value, 10) || 0;
   state.chainIndex = 0;
+  state.networkId = null;       // new family -> default to its primary network
+  state.chains = [];
   state.address = null; state.addressName = null;
-  populateChains();
+  state.asset = null;           // reset to native for the new family
+  await populateChains();
   await populateAddresses();
+  await populateAssets();
   await refreshRate();
   await saveSettings();
 });
 $("#chainSelect").addEventListener("change", async (e) => {
   state.chainIndex = parseInt(e.target.value, 10) || 0;
+  const sel = chainList()[state.chainIndex];
+  state.networkId = sel ? sel.network : null;
+  state.asset = null;           // assets differ per chain (different tokens)
+  await populateAssets();
   await refreshRate();          // ticker/rate can differ per chain (e.g. POL)
   await saveSettings();
 });
-$("#addressSelect").addEventListener("change", (e) => {
+$("#addressSelect").addEventListener("change", async (e) => {
   state.address = e.target.value || null;
   const opt = e.target.selectedOptions[0];
   state.addressName = opt ? opt.dataset.name : null;
+  await populateAssets();       // held tokens depend on the chosen address
   renderAmount(); saveSettings();
 });
-
-function populateChains() {
-  const sel = $("#chainSelect");
-  sel.innerHTML = fam().chains.map((c, i) =>
-    `<option value="${i}" ${i === state.chainIndex ? "selected" : ""}>${c.label} (${c.ticker})</option>`).join("");
-}
-document.querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => {
-  state.capture = b.dataset.capture;
-  syncCaptureUI();
-}));
-$("#passportAttrs").addEventListener("change", () => {
-  state.passportAttrs = [...document.querySelectorAll("#passportAttrs input:checked")].map((i) => i.value);
+$("#assetSelect").addEventListener("change", (e) => {
+  const opt = e.target.selectedOptions[0];
+  if (opt && opt._asset) state.asset = opt._asset;
+  else state.asset = null;      // "" -> native
+  refreshRate(); renderAmount(); saveSettings();
 });
+
+// Build the Chain dropdown for the current family from the wallet's canonical
+// ordered network list (window.maknoon.wallet.getNetworks({chain})). The bridge
+// returns [{ id, label, isTestnet }] already ordered (primary mainnet first,
+// other mainnets, then testnets). We render mainnets and testnets into separate
+// <optgroup>s so the divider is visible. Tickers are not part of the bridge, so
+// we borrow them from the hardcoded fallback by network id, defaulting to the
+// family's native ticker. If getNetworks is missing or throws (older host), we
+// fall back to the family's hardcoded chain list so the dApp never breaks.
+async function resolveChains() {
+  const f = fam();
+  // Lightning has no on-chain networks; keep its single hardcoded entry.
+  if (f.chain === "lightning") return f.chains.map((c) => ({ ...c, isTestnet: false }));
+
+  let list = null;
+  try {
+    const wallet = window.maknoon && window.maknoon.wallet;
+    if (wallet && typeof wallet.getNetworks === "function") {
+      const got = await wallet.getNetworks({ chain: f.chain });
+      if (Array.isArray(got) && got.length) {
+        // Ticker lookup from the hardcoded fallback (e.g. Polygon -> POL).
+        const tickerById = {};
+        for (const c of f.chains) tickerById[c.network] = c.ticker;
+        const nativeTicker = f.chains[0] ? f.chains[0].ticker : "";
+        list = got.map((g) => ({
+          network: g.id,
+          label: g.label || g.id,
+          ticker: tickerById[g.id] || nativeTicker,
+          isTestnet: !!g.isTestnet,
+        }));
+      }
+    }
+  } catch (e) { list = null; }
+
+  // Older host / empty / failure: hardcoded fallback. Derive isTestnet from the
+  // label so the optgroup split still works on the fallback list.
+  if (!list) {
+    list = f.chains.map((c) => ({
+      ...c,
+      isTestnet: c.isTestnet != null ? c.isTestnet : /test|sepolia|devnet|nile|shasta|signet/i.test(c.network + " " + c.label),
+    }));
+  }
+  return list;
+}
+
+async function populateChains() {
+  const sel = $("#chainSelect");
+  state.chains = await resolveChains();
+
+  // Re-resolve the selected index from the persisted/current network id against
+  // the (possibly reordered) list, so the right chain stays selected.
+  const wantId = state.networkId || (chainList()[state.chainIndex] && chainList()[state.chainIndex].network);
+  let idx = state.chains.findIndex((c) => c.network === wantId);
+  if (idx < 0) idx = 0;
+  state.chainIndex = idx;
+  state.networkId = state.chains[idx] ? state.chains[idx].network : null;
+
+  const opt = (c, i) =>
+    `<option value="${i}" ${i === state.chainIndex ? "selected" : ""}>${esc(c.label)} (${esc(c.ticker)})</option>`;
+  const mains = state.chains.map((c, i) => ({ c, i })).filter((x) => !x.c.isTestnet);
+  const tests = state.chains.map((c, i) => ({ c, i })).filter((x) => x.c.isTestnet);
+
+  // Use optgroups to put a visible divider between mainnets and testnets. If a
+  // family has only one bucket, render the flat list (no empty group label).
+  if (mains.length && tests.length) {
+    sel.innerHTML =
+      `<optgroup label="Mainnet">${mains.map((x) => opt(x.c, x.i)).join("")}</optgroup>` +
+      `<optgroup label="Testnet">${tests.map((x) => opt(x.c, x.i)).join("")}</optgroup>`;
+  } else {
+    sel.innerHTML = state.chains.map((c, i) => opt(c, i)).join("");
+  }
+}
+
+// Populate the Asset picker. Bitcoin + Lightning are fixed (BTC / sats) so the
+// field is hidden. ETH/SOL/TRON ask the host for the wallet's assets via
+// window.maknoon.wallet.getAssets, which returns native-first then alphabetical
+// by symbol; we render in that order (no client-side re-sort). If getAssets is
+// missing or throws (older host), fall back to native only and never crash.
+async function populateAssets() {
+  const field = $("#assetField"), hint = $("#assetHint"), sel = $("#assetSelect");
+  if (!field) return;
+  if (isBitcoinFamily()) {
+    field.style.display = "none"; if (hint) hint.style.display = "none";
+    state.asset = null;           // fixed native (BTC / sats)
+    return;
+  }
+  field.style.display = ""; if (hint) hint.style.display = "";
+
+  let assets = [nativeAsset()];
+  try {
+    const wallet = window.maknoon && window.maknoon.wallet;
+    if (wallet && typeof wallet.getAssets === "function") {
+      const got = await wallet.getAssets({ chain: net().chain, network: net().network, address: state.address });
+      if (Array.isArray(got) && got.length) {
+        assets = got.map((g) => ({
+          symbol: g.symbol, name: g.name || g.symbol,
+          contract: g.contract || null, mint: g.mint || null,
+          decimals: typeof g.decimals === "number" ? g.decimals : nativeAsset().decimals,
+          kind: g.kind || "native", balance: g.balance,
+        }));
+        // The getAssets bridge returns native-first then alphabetical by symbol;
+        // render in the order returned (no client-side re-sort).
+      }
+    }
+  } catch (e) { assets = [nativeAsset()]; }   // older host / failure -> native only
+
+  // Keep the prior selection if it is still offered.
+  const cur = state.asset;
+  const key = (x) => `${x.kind}:${x.contract || x.mint || x.symbol}`;
+  sel.innerHTML = "";
+  assets.forEach((x) => {
+    const o = document.createElement("option");
+    o.value = key(x);
+    o.textContent = x.kind === "native" ? `${x.symbol} (native)` : `${x.symbol}${x.name && x.name !== x.symbol ? " (" + x.name + ")" : ""}`;
+    o._asset = x.kind === "native" ? null : x;   // null => native default
+    sel.appendChild(o);
+  });
+  const match = cur && assets.find((x) => key(x) === key(cur));
+  if (match) { state.asset = match.kind === "native" ? null : match; sel.value = key(match); }
+  else { state.asset = null; sel.value = key(assets[0]); }
+  if (hint) hint.textContent = assets.length > 1 ? "Pick which asset to receive." : "Receiving the native coin.";
+}
 
 async function openSettings() {
   const ns = $("#networkSelect");
   ns.innerHTML = FAMILIES.map((f, i) => `<option value="${i}" ${i === state.famIndex ? "selected" : ""}>${f.label}</option>`).join("");
-  populateChains();
+  await populateChains();
   await populateAddresses();
-  syncCaptureUI();
+  await populateAssets();
+  syncVerifyChecks();
   try { $("#storeName").value = (await window.maknoon.storage.getItem("merchantName")) || ""; } catch (e) {}
   await renderMerchant();
   $("#settingsOverlay").classList.remove("hidden");
 }
+
+$("#verifyChecks").addEventListener("change", () => {
+  state.verifyChecks = [...document.querySelectorAll("#verifyChecks input:checked")].map((i) => i.value);
+  saveSettings();
+});
 
 // The store name customers see (verifierName / merchantName). Persisted under
 // "merchantName"; the wallet injects it into requests this dApp signs.
@@ -522,7 +778,7 @@ async function populateAddresses() {
   }
 
   sel.innerHTML = list.map((e) => {
-    const suffix = isLightning() ? "" : ` — ${short(e.address)}`;
+    const suffix = isLightning() ? "" : ` (${short(e.address)})`;
     return `<option value="${esc(e.address)}" data-name="${esc(e.name)}" ${e.address === state.address ? "selected" : ""}>${esc(e.name)}${e.isOwnWallet && !isLightning() ? " (my wallet)" : ""}${suffix}</option>`;
   }).join("");
   if (!state.address || !list.some((e) => e.address === state.address)) {
@@ -539,10 +795,11 @@ async function populateAddresses() {
   renderReceiveLine();
 }
 
-function syncCaptureUI() {
-  document.querySelectorAll(".seg-btn").forEach((b) => b.classList.toggle("active", b.dataset.capture === state.capture));
-  $("#passportAttrs").classList.toggle("hidden", state.capture !== "passport");
-  [...document.querySelectorAll("#passportAttrs input")].forEach((i) => { i.checked = state.passportAttrs.includes(i.value); });
+// Reflect state.verifyChecks into the always-visible checklist.
+function syncVerifyChecks() {
+  [...document.querySelectorAll("#verifyChecks input")].forEach((i) => {
+    i.checked = state.verifyChecks.includes(i.value);
+  });
 }
 
 // --- receipts -------------------------------------------------------------
@@ -554,12 +811,34 @@ $("#receiptsBtn").addEventListener("click", async () => {
 });
 $("#closeReceipts").addEventListener("click", () => $("#receiptsOverlay").classList.add("hidden"));
 
+const ATTR_LABELS = {
+  sdnScreen: "Sanctions", givenName: "Given name", familyName: "Family name",
+  nationality: "Nationality", dateOfBirth: "Date of birth", passportNumber: "Document number",
+};
+// Human text for one disclosed claim value (sdnScreen is an object).
+function attrText(key, value) {
+  if (key === "sdnScreen" && value && typeof value === "object") {
+    const r = value.result || "?";
+    const at = String(value.screenedAt || "").slice(0, 10);
+    return at ? `${r} (screened ${at})` : r;
+  }
+  if (value && typeof value === "object") return JSON.stringify(value);
+  return String(value == null ? "" : value);
+}
 function txRow(t) {
   const when = new Date(t.at).toLocaleString();
+  const attrs = t.attrs || {};
+  const attrRows = Object.keys(attrs).map((k) =>
+    `<div class="tx-attr"><span>${esc(ATTR_LABELS[k] || k)}</span><span>${esc(attrText(k, attrs[k]))}</span></div>`,
+  ).join("");
+  // Settlement ref as a tappable block-explorer link (opens in the device browser).
+  const link = t.txHash ? txLink(t.chain, t.network, t.txHash, "") : "";
   return `<div class="tx-row">
     <div class="tx-top"><span class="tx-amt">${esc(t.crypto)} ${esc(t.ticker)}</span>
       <span class="tx-badge">${esc(t.badge || "verified")}</span></div>
     <div class="tx-meta"><span>${esc(when)}</span><span class="tx-fiat">${esc(t.fiatText || "")}</span></div>
+    ${attrRows ? `<div class="tx-attrs">${attrRows}</div>` : ""}
+    ${link}
   </div>`;
 }
 
@@ -577,8 +856,13 @@ function esc(s) {
     return;
   }
   await loadSettings();
-  await refreshRate();
+  // Resolve the chain list from the wallet's canonical network ordering so the
+  // selected network id (and its index) is correct before pricing/addresses.
+  try { await populateChains(); } catch (e) {}
   // Resolve a default address if none chosen yet.
   if (!state.address) { try { await populateAddresses(); } catch (e) {} }
+  // Resolve the asset list (and re-validate any persisted asset) before pricing.
+  try { await populateAssets(); } catch (e) {}
+  await refreshRate();
   renderAmount();
 })();
