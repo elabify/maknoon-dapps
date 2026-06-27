@@ -26,15 +26,28 @@ const CATALOG_PATH = join(ROOT, "catalog.json");
 // wallets to re-download). `channel` is the release track (beta|stable).
 // `requiresMaknoon` is the minimum Maknoon app version the dApp targets.
 const APP_META = {
-  // Single Point of Sale app (the former pos-demo + pos-demo-beta, merged). Stays
-  // on the beta channel; carries the all-chains Verify & Pay + asset picker, so it
-  // needs the wallet capability and Maknoon >= 0.6.0.
+  // Point of Sale ships as TWO beta entries (keyed by bundle dir) so each Maknoon
+  // version gets the right permission set. The POS bundle code is identical across
+  // both; only the declared capabilities + compat window differ. The host re-scoped
+  // receive flows from "payment" to "wallet" in 0.6.3 (ADR-0036):
+  //   - 0.1.5 (dir "pos"): for Maknoon <= 0.6.2, keeps "payment"; superseded at 0.6.3.
+  //   - 0.1.6 (dir "pos-0.1.6"): for Maknoon >= 0.6.3, declares only identity + wallet.
+  // Both carry catalog id "pos"; the loop matches the catalog entry by id + version.
   "pos": {
-    version: "0.1.5", entry: "index.html", channel: "beta", requiresMaknoon: "0.6.0",
+    id: "pos", version: "0.1.5", entry: "index.html", channel: "beta",
+    requiresMaknoon: "0.6.0", supersededAtMaknoon: "0.6.3",
     capabilities: [
       { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
       { name: "payment", reason: "Receive payments and pick a receiving address" },
       { name: "wallet", reason: "Read which assets your wallets hold so you can pick one to receive" },
+    ],
+  },
+  "pos-0.1.6": {
+    id: "pos", version: "0.1.6", entry: "index.html", channel: "beta",
+    requiresMaknoon: "0.6.3",
+    capabilities: [
+      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
+      { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
     ],
   },
 };
@@ -76,7 +89,8 @@ for (const appId of readdirSync(APPS_DIR)) {
   writeFileSync(join(appDir, "manifest.json"), manifestBytes);
   const manifestSha = sha256Hex(manifestBytes);
 
-  const entry = catalog.apps.find((a) => a.id === appId);
+  const catalogId = meta.id || appId;
+  const entry = catalog.apps.find((a) => a.id === catalogId && a.version === meta.version);
   if (entry) {
     entry.manifestSha256 = manifestSha;
     // Keep the catalog's advertised version/channel/compat in sync with APP_META.
