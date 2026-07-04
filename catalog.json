@@ -11,13 +11,41 @@
       "summary": "Verify a customer and accept payments.",
       "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers make payments on the network you choose to your wallet along with sending the required credentials to verify.",
       "iconName": "creditcard.fill",
-      "statusLabel": "Beta",
+      "statusLabel": "Stable",
       "curatedBy": "Elabify",
       "version": "0.1.6",
-      "channel": "beta",
+      "channel": "stable",
       "requiresMaknoonVersion": "0.6.3",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/manifest.json",
       "manifestSha256": "fd612d461626298d62d506a9ff8d95f44059cb6d984ddbe5b1edea0936c13af0",
+      "permissions": [
+        "identity",
+        "wallet"
+      ],
+      "capabilities": [
+        {
+          "name": "identity",
+          "reason": "Verify each customer holds a sanctions-clean credential"
+        },
+        {
+          "name": "wallet",
+          "reason": "Read your receiving addresses across all networks, including assets and transaction history"
+        }
+      ]
+    },
+    {
+      "id": "pos",
+      "title": "Point of Sale",
+      "summary": "Verify a customer and accept payments.",
+      "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers make payments on the network you choose to your wallet along with sending the required credentials to verify.",
+      "iconName": "creditcard.fill",
+      "statusLabel": "Beta",
+      "curatedBy": "Elabify",
+      "version": "0.1.7",
+      "channel": "beta",
+      "requiresMaknoonVersion": "0.6.3",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/manifest-beta.json",
+      "manifestSha256": "25d86a60aa67a2994e4fb760fff3c16bef66fc414e651a2c1dafde94c325da0f",
       "permissions": [
         "identity",
         "wallet"

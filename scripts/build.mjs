@@ -22,35 +22,39 @@ const ROOT = join(fileURLToPath(import.meta.url), "..", "..");
 const APPS_DIR = join(ROOT, "apps");
 const CATALOG_PATH = join(ROOT, "catalog.json");
 
-// Per-app metadata. `version` is the bundle/app version (bump to force
-// wallets to re-download). `channel` is the release track (beta|stable).
-// `requiresMaknoon` is the minimum Maknoon app version the dApp targets.
+// Per-app metadata, keyed by catalog app id. Each app ships from ONE bundle
+// `dir`, and can publish multiple release `channels` (stable, beta) built from
+// the SAME files; only the manifest `version` (and hence its sha) differs, so a
+// beta can stand in for "the next version" without duplicating the bundle. Each
+// channel writes its own manifest file so the catalog can point stable + beta at
+// distinct manifests inside the single folder. The loop matches the catalog
+// entry by id + version.
 const APP_META = {
-  // Point of Sale ships as TWO beta entries (keyed by bundle dir) so each Maknoon
-  // version gets the right permission set. The POS bundle code is identical across
-  // both; only the declared capabilities + compat window differ. The host re-scoped
-  // receive flows from "payment" to "wallet" in 0.6.3 (ADR-0036):
-  //   - 0.1.5 (dir "pos"): for Maknoon <= 0.6.2, keeps "payment"; superseded at 0.6.3.
-  //   - 0.1.6 (dir "pos-0.1.6"): for Maknoon >= 0.6.3, declares only identity + wallet.
-  // Both carry catalog id "pos"; the loop matches the catalog entry by id + version.
-  "pos": {
-    id: "pos", version: "0.1.5", entry: "index.html", channel: "beta",
-    requiresMaknoon: "0.6.0", supersededAtMaknoon: "0.6.3",
-    capabilities: [
-      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
-      { name: "payment", reason: "Receive payments and pick a receiving address" },
-      { name: "wallet", reason: "Read which assets your wallets hold so you can pick one to receive" },
-    ],
-  },
-  "pos-0.1.6": {
-    id: "pos", version: "0.1.6", entry: "index.html", channel: "beta",
-    requiresMaknoon: "0.6.3",
-    capabilities: [
-      { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
-      { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
+  pos: {
+    dir: "pos",
+    entry: "index.html",
+    channels: [
+      {
+        channel: "stable", version: "0.1.6", manifestFile: "manifest.json",
+        requiresMaknoon: "0.6.3",
+        capabilities: [
+          { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
+          { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
+        ],
+      },
+      {
+        channel: "beta", version: "0.1.7", manifestFile: "manifest-beta.json",
+        requiresMaknoon: "0.6.3",
+        capabilities: [
+          { name: "identity", reason: "Verify each customer holds a sanctions-clean credential" },
+          { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
+        ],
+      },
     ],
   },
 };
+
+const BASE_URL = "https://elabify.github.io/maknoon-dapps/apps";
 
 function sha256Hex(buf) {
   return createHash("sha256").update(buf).digest("hex");
@@ -62,7 +66,7 @@ function listFiles(dir) {
     const full = join(dir, name);
     if (statSync(full).isDirectory()) {
       out.push(...listFiles(full));
-    } else if (name !== "manifest.json") {
+    } else if (!/^manifest.*\.json$/.test(name)) {
       out.push(full);
     }
   }
@@ -72,11 +76,15 @@ function listFiles(dir) {
 const catalog = JSON.parse(readFileSync(CATALOG_PATH, "utf8"));
 let built = 0;
 
-for (const appId of readdirSync(APPS_DIR)) {
-  const appDir = join(APPS_DIR, appId);
-  if (!statSync(appDir).isDirectory()) continue;
-  const meta = APP_META[appId] || { version: "1.0.0", entry: "index.html" };
+for (const [appId, meta] of Object.entries(APP_META)) {
+  const appDir = join(APPS_DIR, meta.dir);
+  if (!statSync(appDir).isDirectory()) {
+    console.warn(`[build] WARNING: app '${appId}' has no bundle dir '${meta.dir}'`);
+    continue;
+  }
 
+  // The bundle file set is shared across channels; only the manifest version
+  // (and thus its sha) differs, so hash the files once.
   const files = listFiles(appDir)
     .map((full) => ({
       path: relative(appDir, full).split(sep).join("/"),
@@ -84,25 +92,29 @@ for (const appId of readdirSync(APPS_DIR)) {
     }))
     .sort((a, b) => a.path.localeCompare(b.path));
 
-  const manifest = { version: meta.version, entry: meta.entry, files };
-  const manifestBytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  writeFileSync(join(appDir, "manifest.json"), manifestBytes);
-  const manifestSha = sha256Hex(manifestBytes);
+  for (const ch of meta.channels) {
+    const manifest = { version: ch.version, entry: meta.entry, files };
+    const manifestBytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n", "utf8");
+    writeFileSync(join(appDir, ch.manifestFile), manifestBytes);
+    const manifestSha = sha256Hex(manifestBytes);
 
-  const catalogId = meta.id || appId;
-  const entry = catalog.apps.find((a) => a.id === catalogId && a.version === meta.version);
-  if (entry) {
-    entry.manifestSha256 = manifestSha;
-    // Keep the catalog's advertised version/channel/compat in sync with APP_META.
-    entry.version = meta.version;
-    if (meta.channel) entry.channel = meta.channel;
-    if (meta.requiresMaknoon) entry.requiresMaknoonVersion = meta.requiresMaknoon;
-    if (meta.supersededAtMaknoon) entry.supersededAtMaknoonVersion = meta.supersededAtMaknoon;
-    if (meta.capabilities) entry.capabilities = meta.capabilities;
-    built++;
-    console.log(`[build] ${appId}: v${meta.version} ${meta.channel || ""} ${files.length} files, manifest ${manifestSha.slice(0, 12)}…`);
-  } else {
-    console.warn(`[build] WARNING: app '${appId}' has no catalog entry`);
+    const entry = catalog.apps.find((a) => a.id === appId && a.version === ch.version);
+    if (entry) {
+      entry.manifestSha256 = manifestSha;
+      entry.manifestURL = `${BASE_URL}/${meta.dir}/${ch.manifestFile}`;
+      entry.channel = ch.channel;
+      entry.version = ch.version;
+      if (ch.requiresMaknoon) entry.requiresMaknoonVersion = ch.requiresMaknoon;
+      if (ch.supersededAtMaknoon) entry.supersededAtMaknoonVersion = ch.supersededAtMaknoon;
+      if (ch.capabilities) {
+        entry.capabilities = ch.capabilities;
+        entry.permissions = ch.capabilities.map((c) => c.name);
+      }
+      built++;
+      console.log(`[build] ${appId}: v${ch.version} ${ch.channel} (${ch.manifestFile}) ${files.length} files, manifest ${manifestSha.slice(0, 12)}…`);
+    } else {
+      console.warn(`[build] WARNING: no catalog entry for ${appId} v${ch.version}`);
+    }
   }
 }
 
