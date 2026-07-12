@@ -60,6 +60,39 @@
           "reason": "Read your receiving addresses across all networks, including assets and transaction history"
         }
       ]
+    },
+    {
+      "id": "uniswap-v4",
+      "title": "UniswapV4",
+      "summary": "Swap in a credential-gated Uniswap v4 pool.",
+      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain identity (ONCHAINID) unlocks the pool. Swaps settle on the network you are connected to. The pilot pool trades mock AUDD for mock cbBTC on Base Sepolia.",
+      "iconName": "arrow.left.arrow.right.circle.fill",
+      "statusLabel": "Beta",
+      "curatedBy": "Elabify",
+      "version": "0.1.0",
+      "channel": "beta",
+      "requiresMaknoonVersion": "0.6.6",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/manifest.json",
+      "manifestSha256": "55ccac8632db97f28698e18bebab48562676d2f8d9fbe743bbcc083a82b24836",
+      "permissions": [
+        "wallet.ethereum.read",
+        "wallet.ethereum.write",
+        "identity"
+      ],
+      "capabilities": [
+        {
+          "name": "wallet.ethereum.read",
+          "reason": "Read Ethereum chain state and switch to Base Sepolia"
+        },
+        {
+          "name": "wallet.ethereum.write",
+          "reason": "Submit your approve and swap transactions (you approve each one)"
+        },
+        {
+          "name": "identity",
+          "reason": "Prove you are a verified, non-sanctioned human to access the pool"
+        }
+      ]
     }
   ]
 }

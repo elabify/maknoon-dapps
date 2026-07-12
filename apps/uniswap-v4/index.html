@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>UniswapV4</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">⇄</span>
+        <span class="brand-name">UniswapV4</span>
+        <span class="badge badge-beta">Beta</span>
+      </div>
+      <button id="netChip" class="net-chip" data-i18n="net_base_sepolia">Base Sepolia</button>
+    </header>
+
+    <!-- connect / gate state -->
+    <section id="gateCard" class="card gate">
+      <div id="gateIcon" class="gate-icon">🔒</div>
+      <h2 id="gateTitle" class="gate-title" data-i18n="gate_connect_title">Connect your wallet</h2>
+      <p id="gateBody" class="gate-body" data-i18n="gate_connect_body">This pool only admits verified, non-sanctioned humans.</p>
+      <button id="gateBtn" class="primary-btn" data-i18n="btn_connect">Connect wallet</button>
+      <p id="gateError" class="gate-error hidden"></p>
+    </section>
+
+    <!-- credential card (shown once verified) -->
+    <section id="credCard" class="card cred hidden">
+      <div class="cred-row">
+        <span class="cred-check">✓</span>
+        <div>
+          <div class="cred-title" data-i18n="cred_title">Verified human, not sanctioned</div>
+          <div class="cred-sub" data-i18n="cred_sub">Your portable on-chain credential (ONCHAINID)</div>
+        </div>
+      </div>
+      <code id="credId" class="cred-id"></code>
+    </section>
+
+    <!-- swap form (enabled once allowed) -->
+    <section id="swapCard" class="card swap hidden">
+      <div class="leg">
+        <div class="leg-head">
+          <span class="leg-label" data-i18n="you_pay">You pay</span>
+          <span id="paySym" class="leg-sym">AUDD</span>
+        </div>
+        <input id="payAmount" class="leg-input" inputmode="decimal" placeholder="0.0" />
+      </div>
+      <div class="arrow">↓</div>
+      <div class="leg">
+        <div class="leg-head">
+          <span class="leg-label" data-i18n="you_receive">You receive (estimate)</span>
+          <span id="getSym" class="leg-sym">cbBTC</span>
+        </div>
+        <div id="getAmount" class="leg-input readonly">0.0</div>
+      </div>
+      <button id="swapBtn" class="primary-btn" data-i18n="btn_swap" disabled>Enter an amount</button>
+    </section>
+
+    <!-- status / result overlay -->
+    <div id="overlay" class="overlay hidden">
+      <div class="sheet">
+        <div class="steps" id="steps"></div>
+        <div id="resultBox" class="result-box hidden"></div>
+        <div class="sheet-actions">
+          <button id="closeOverlay" class="ghost-btn" data-i18n="close">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote" data-i18n="footnote">Testnet demo. Tokens are mock AUDD and cbBTC on Base Sepolia.</p>
+  </main>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

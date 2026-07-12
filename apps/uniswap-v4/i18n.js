@@ -1,0 +1,120 @@
+// In-bundle i18n for the UniswapV4 mini-app. English + Simplified Chinese + Arabic
+// (RTL). The host exposes the user's chosen app language via
+// window.maknoon.device.info() (locale); boot() in app.js normalizes it, sets
+// window.__uniLang + documentElement.lang/dir, then applyStaticI18n() fills every
+// [data-i18n*] element. Runtime strings use t(key, vars).
+//
+// Arabic + Chinese are machine-translated and flagged for human review (matching
+// the holder apps' policy); en is the source of truth and the fallback.
+
+"use strict";
+
+const I18N = {
+  en: {
+    net_base_sepolia: "Base Sepolia",
+    gate_connect_title: "Connect your wallet",
+    gate_connect_body: "This pool only admits verified, non-sanctioned humans.",
+    btn_connect: "Connect wallet",
+    gate_verify_title: "Verify to access",
+    gate_verify_body: "Prove you are a verified, non-sanctioned human with your passport credential to unlock the pool.",
+    btn_verify: "Verify with passport",
+    cred_title: "Verified human, not sanctioned",
+    cred_sub: "Your portable on-chain credential (ONCHAINID)",
+    you_pay: "You pay",
+    you_receive: "You receive (estimate)",
+    btn_swap: "Swap",
+    btn_enter_amount: "Enter an amount",
+    quoted_onchain: "quoted on-chain at swap",
+    step_approve: "Approve token",
+    step_swap: "Swap",
+    swap_done: "Swap submitted",
+    swap_failed: "Swap failed",
+    close: "Close",
+    footnote: "Testnet demo. Tokens are mock AUDD and cbBTC on Base Sepolia.",
+    open_inside: "Open this inside the Maknoon app.",
+    err_no_account: "No wallet account returned.",
+    err_verify_denied: "Verification was declined.",
+    err_needs_host_presentation: "This build of Maknoon does not yet return the presentation needed for pool access. Update the app.",
+    err_grant_failed: "The verifier could not grant access. {detail}",
+    err_generic: "Something went wrong.",
+  },
+  ar: {
+    // needs_review (machine-translated)
+    net_base_sepolia: "بيس سيبوليا",
+    gate_connect_title: "اربط محفظتك",
+    gate_connect_body: "لا يسمح هذا المجمع إلا للأشخاص الموثقين وغير الخاضعين للعقوبات.",
+    btn_connect: "ربط المحفظة",
+    gate_verify_title: "وثّق للوصول",
+    gate_verify_body: "أثبت أنك شخص موثق وغير خاضع للعقوبات باستخدام بيانات جواز سفرك لفتح المجمع.",
+    btn_verify: "التوثيق بجواز السفر",
+    cred_title: "شخص موثق، غير خاضع للعقوبات",
+    cred_sub: "بيانات اعتمادك المحمولة على السلسلة (ONCHAINID)",
+    you_pay: "أنت تدفع",
+    you_receive: "أنت تستلم (تقديري)",
+    btn_swap: "مبادلة",
+    btn_enter_amount: "أدخل مبلغاً",
+    quoted_onchain: "يُسعّر على السلسلة عند المبادلة",
+    step_approve: "الموافقة على الرمز",
+    step_swap: "مبادلة",
+    swap_done: "تم إرسال المبادلة",
+    swap_failed: "فشلت المبادلة",
+    close: "إغلاق",
+    footnote: "عرض على شبكة الاختبار. الرموز هي AUDD و cbBTC وهمية على بيس سيبوليا.",
+    open_inside: "افتح هذا داخل تطبيق مكنون.",
+    err_no_account: "لم تُرجع أي محفظة.",
+    err_verify_denied: "تم رفض التوثيق.",
+    err_needs_host_presentation: "هذا الإصدار من مكنون لا يعيد بعد العرض المطلوب للوصول إلى المجمع. حدّث التطبيق.",
+    err_grant_failed: "تعذّر على المُوثِّق منح الوصول. {detail}",
+    err_generic: "حدث خطأ ما.",
+  },
+  "zh-Hans": {
+    // needs_review (machine-translated)
+    net_base_sepolia: "Base Sepolia",
+    gate_connect_title: "连接你的钱包",
+    gate_connect_body: "此资金池仅允许经过验证且未受制裁的真人参与。",
+    btn_connect: "连接钱包",
+    gate_verify_title: "验证以访问",
+    gate_verify_body: "用你的护照凭证证明你是经过验证且未受制裁的真人，以解锁资金池。",
+    btn_verify: "用护照验证",
+    cred_title: "已验证真人，未受制裁",
+    cred_sub: "你的可携带链上凭证 (ONCHAINID)",
+    you_pay: "你支付",
+    you_receive: "你收到（预估）",
+    btn_swap: "兑换",
+    btn_enter_amount: "输入金额",
+    quoted_onchain: "兑换时按链上报价",
+    step_approve: "授权代币",
+    step_swap: "兑换",
+    swap_done: "兑换已提交",
+    swap_failed: "兑换失败",
+    close: "关闭",
+    footnote: "测试网演示。代币为 Base Sepolia 上的模拟 AUDD 和 cbBTC。",
+    open_inside: "请在 Maknoon 应用内打开。",
+    err_no_account: "未返回钱包账户。",
+    err_verify_denied: "验证被拒绝。",
+    err_needs_host_presentation: "此版本的 Maknoon 尚未返回资金池访问所需的凭证展示。请更新应用。",
+    err_grant_failed: "验证方无法授予访问权限。{detail}",
+    err_generic: "出现问题。",
+  },
+};
+
+function normLocale(loc) {
+  const l = String(loc || "en").toLowerCase();
+  if (l.startsWith("ar")) return "ar";
+  if (l.startsWith("zh")) return "zh-Hans";
+  return "en";
+}
+
+function t(key, vars) {
+  const lang = window.__uniLang || "en";
+  const table = I18N[lang] || I18N.en;
+  let s = (table[key] != null) ? table[key] : (I18N.en[key] != null ? I18N.en[key] : key);
+  if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
+  return s;
+}
+
+function applyStaticI18n() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPh)); });
+}

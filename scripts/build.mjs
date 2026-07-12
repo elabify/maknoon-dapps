@@ -52,6 +52,21 @@ const APP_META = {
       },
     ],
   },
+  "uniswap-v4": {
+    dir: "uniswap-v4",
+    entry: "index.html",
+    channels: [
+      {
+        channel: "beta", version: "0.1.0", manifestFile: "manifest.json",
+        requiresMaknoon: "0.6.6",
+        capabilities: [
+          { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and switch to Base Sepolia" },
+          { name: "wallet.ethereum.write", reason: "Submit your approve and swap transactions (you approve each one)" },
+          { name: "identity", reason: "Prove you are a verified, non-sanctioned human to access the pool" },
+        ],
+      },
+    ],
+  },
 };
 
 const BASE_URL = "https://elabify.github.io/maknoon-dapps/apps";
