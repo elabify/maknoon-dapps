@@ -6,32 +6,36 @@
 // ONCHAINID / ERC-3643 gate or the fallback registry).
 //
 // Everything is config-driven (CONFIG below), so this extends to any EVM
-// network and any Uniswap v4 pool. The shipped config is the pilot AUDD -> cbBTC
-// pool on Base Sepolia. Signing/verification happen in native Maknoon sheets;
+// network and any Uniswap v4 pool. The shipped config is the pilot AUDD -> MMF
+// pool on Base Sepolia (a tokenized AUD money-market fund, gated to verified,
+// non-sanctioned holders). Signing/verification happen in native Maknoon sheets;
 // this page only orchestrates and never sees key material.
 
 "use strict";
 
 // ---------------------------------------------------------------------------
-// CONFIG. Addresses marked TODO-DEPLOY are filled in after the Base Sepolia
-// broadcast of the ONCHAINID stack + gate + pool (deployments/84532.json).
+// CONFIG. The Base Sepolia demo pool + gate + tokens (all verified on Basescan,
+// 2026-07-14). To re-point at a redeploy, swap the pool addresses below.
 // ---------------------------------------------------------------------------
 const CONFIG = {
   chainIdHex: "0x14a34",            // 84532 Base Sepolia
   chainId: 84532,
   chainLabel: "Base Sepolia",
-  // Verifier that runs POST /v1/pool-access/grant (writes the on-chain grant /
-  // ONCHAINID claim). TODO-DEPLOY: point at the pilot verifier base URL.
-  verifierBaseUrl: "https://TODO-DEPLOY.verifier.example",
-  verifierDid: "did:elabify:sepolia:issuer:musnad",   // TODO-DEPLOY: confirm the pilot verifier DID
+  caip2: "eip155:84532",
+  // The Access Issuer (issuer-backend) runs POST /v1/networks/{caip2}/access-issuer/grant: it
+  // verifies the passport, sanctions-clean presentation, then writes the on-chain ONCHAINID /
+  // ERC-3643 claim (ADR-0058). Writing access is an issuer action, so this points at the issuer,
+  // not the verifier; the native handler binds the wallet-control proof to issuerDid.
+  issuerBaseUrl: "https://musnad-issuer.elabify.com",
+  issuerDid: "did:elabify:sepolia:issuer:musnad",
   passportSchema: "elabify://schema/global/passport/v1",
   pool: {
     poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408", // Base Sepolia v4 PoolManager (verified)
     poolSwapTest: "0x8b5bcc363dde2614281ad875bad385e0a785d3b9", // Base Sepolia PoolSwapTest router (verified)
-    accessGate: "0x0000000000000000000000000000000000000000",   // TODO-DEPLOY: OnchainIdAccessGate
-    hook: "0x0000000000000000000000000000000000000000",         // TODO-DEPLOY: MusnadAccessHook (CREATE2-mined)
-    tokenIn:  { symbol: "AUDD",  address: "0x0000000000000000000000000000000000000000", decimals: 6 }, // TODO-DEPLOY: MockAUDD
-    tokenOut: { symbol: "cbBTC", address: "0x0000000000000000000000000000000000000000", decimals: 8 }, // TODO-DEPLOY: MockCbBTC
+    accessGate: "0x5af09be4e3675838Ae1728749424971B094228e8",   // OnchainIdAccessGate (verified on Basescan)
+    hook: "0xBB75553378783dc1390a078E7C07c81EEF1A0080",         // MusnadAccessHook (CREATE2-mined, verified)
+    tokenIn:  { symbol: "AUDD", address: "0xcc2B67931962DF907281C8D66cdb306437eAcC99", decimals: 6 },  // MockAUDD (AUD stablecoin)
+    tokenOut: { symbol: "MMF",  address: "0xf987E964d2C0A76651108c3a671DC81d934D2FF2", decimals: 18 }, // MockMMF (tokenized AUD money-market fund)
     fee: 3000,
     tickSpacing: 60,
   },
@@ -151,12 +155,14 @@ async function verifyToAccess() {
   try {
     // The host performs the whole grant natively (mirrors commerce): it discloses
     // a passport, sanctions-clean presentation, proves control of this EVM address
-    // with an EIP-712 WalletControl signature, and POSTs both to the verifier's
-    // /v1/pool-access/grant. The presentation and key material never enter this
-    // app; we only receive { granted, walletAddress, txHash, expiry }.
+    // with an EIP-712 WalletControl signature (bound to the issuer DID), and POSTs
+    // both to the Access Issuer's /v1/networks/{caip2}/access-issuer/grant. The
+    // presentation and key material never enter this app; we only receive
+    // { granted, walletAddress, txHash, expiry }.
     const res = await window.maknoon.poolAccess.grant({
-      verifierUrl: CONFIG.verifierBaseUrl,
-      verifierDid: CONFIG.verifierDid,
+      issuerUrl: CONFIG.issuerBaseUrl,
+      issuerDid: CONFIG.issuerDid,
+      chain: CONFIG.caip2,
       gateAddress: CONFIG.pool.accessGate,
     });
     if (!res || !res.granted) {
