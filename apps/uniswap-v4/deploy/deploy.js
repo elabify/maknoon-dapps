@@ -25,10 +25,17 @@ const FEE = 3000;
 // Target ~1,000,000 units of value on each side of the pool (deep, low-slippage for a demo).
 const TARGET_UNITS = 1_000_000n;
 
+// Reliable read + confirmation-polling RPC per chain (MetaMask's default endpoint
+// rate-limits under tx polling). Chains not listed fall back to MetaMask's own
+// provider for reads, so no RPC input is needed in the form.
+const DEFAULT_RPC = {
+  84532: 'https://base-sepolia-rpc.publicnode.com', // Base Sepolia
+  11155111: 'https://ethereum-sepolia-rpc.publicnode.com', // Ethereum Sepolia
+};
+
 // Base Sepolia defaults (all overridable in the form).
 const DEFAULTS = {
   chainId: 84532,
-  rpcUrl: 'https://base-sepolia-rpc.publicnode.com',
   poolManager: '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408',
   gate: '0x5af09be4e3675838Ae1728749424971B094228e8',
   poolSwapTest: '0x8b5bcc363dde2614281ad875bad385e0a785d3b9',
@@ -146,9 +153,19 @@ async function pickProvider() {
   throw new Error('no EVM wallet extension found');
 }
 
+// The chain from the dropdown, or the custom field when "Custom chain ID…" is picked.
+function selectedChainId() {
+  const sel = $('chainSelect').value;
+  if (sel === 'custom') {
+    const c = parseInt($('chainIdCustom').value.trim(), 10);
+    if (!Number.isFinite(c) || c <= 0) throw new Error('Enter a valid custom chain ID');
+    return c;
+  }
+  return parseInt(sel, 10) || DEFAULTS.chainId;
+}
+
 async function connect() {
-  const chainId = parseInt($('chainId').value.trim() || String(DEFAULTS.chainId), 10);
-  const rpcUrl = $('rpcUrl').value.trim() || DEFAULTS.rpcUrl;
+  const chainId = selectedChainId();
   state.chainId = chainId;
   const chainHex = '0x' + chainId.toString(16);
   const eth = (state.eip1193 = await pickProvider());
@@ -158,16 +175,20 @@ async function connect() {
     try {
       await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainHex }] });
     } catch (switchErr) {
-      if (switchErr && switchErr.code === 4902) {
+      if (switchErr && switchErr.code === 4902 && DEFAULT_RPC[chainId]) {
         await eth.request({
           method: 'wallet_addEthereumChain',
-          params: [{ chainId: chainHex, chainName: `Chain ${chainId}`, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [rpcUrl], blockExplorerUrls: [] }],
+          params: [{ chainId: chainHex, chainName: `Chain ${chainId}`, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: [DEFAULT_RPC[chainId]], blockExplorerUrls: [] }],
         });
+      } else if (switchErr && switchErr.code === 4902) {
+        throw new Error(`Add chain ${chainId} to MetaMask first, then reconnect`);
       } else { throw switchErr; }
     }
   }
   state.provider = new ethers.BrowserProvider(eth);
-  state.reader = new ethers.JsonRpcProvider(rpcUrl, chainId);
+  // Reads + confirmation polling: a known reliable RPC per chain, else MetaMask's
+  // own provider (dodges MetaMask's rate-limited default endpoint on common chains).
+  state.reader = DEFAULT_RPC[chainId] ? new ethers.JsonRpcProvider(DEFAULT_RPC[chainId], chainId) : state.provider;
   state.signer = await state.provider.getSigner();
   state.account = await state.signer.getAddress();
   await loadArtifacts();
@@ -384,4 +405,8 @@ window.addEventListener('DOMContentLoaded', () => {
   $('btn-mint').onclick = () => runMint();
   wireModeToggle('A');
   wireModeToggle('B');
+  const chainSel = $('chainSelect');
+  const toggleCustomChain = () => { $('chainIdCustom').style.display = chainSel.value === 'custom' ? '' : 'none'; };
+  chainSel.addEventListener('change', toggleCustomChain);
+  toggleCustomChain();
 });

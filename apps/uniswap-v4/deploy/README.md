@@ -1,9 +1,11 @@
 # Credential-gated pool deploy tool
 
-A public, static browser tool for deploying a credential-gated UniswapV4 pool. Open it with a
-browser that has MetaMask:
+A public, static browser tool for deploying a credential-gated UniswapV4 pool. It lives alongside the
+uniswap-v4 mini-app but is a standalone browser page (NOT part of the mini-app bundle: `build.mjs`
+excludes this `deploy/` folder from the manifest the wallet downloads). Open it with a browser that
+has MetaMask:
 
-> https://elabify.github.io/maknoon-dapps/tools/pool-deploy/
+> https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/deploy/
 
 Your **MetaMask signs every transaction** — there is no server, no raw key, and no secret handled
 here. It cannot run inside the Maknoon wallet mini-app host (that bridge rejects contract-creation

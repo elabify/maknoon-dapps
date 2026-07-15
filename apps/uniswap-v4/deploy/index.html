@@ -14,7 +14,7 @@
       .card { border: 1px solid #8883; border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
       .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
       label { display: block; font-size: 12px; opacity: 0.8; margin-top: 8px; }
-      input { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid #8886; }
+      input, select { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid #8886; }
       .radio { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
       button { cursor: pointer; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid #8886; background: #2563eb; color: #fff; }
       button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -37,10 +37,33 @@
     <div class="card">
       <button id="btn-connect">Connect MetaMask</button>
       <span style="margin-left: 10px; font-size: 12px">account: <code id="account">not connected</code></span>
-      <div class="grid2">
-        <div><label>Chain ID (default Base Sepolia 84532)</label><input id="chainId" value="84532" /></div>
-        <div><label>RPC URL</label><input id="rpcUrl" value="https://base-sepolia-rpc.publicnode.com" /></div>
-      </div>
+      <label>Chain (Maknoon wallet EVM networks; reads use a known RPC or MetaMask)</label>
+      <select id="chainSelect">
+        <optgroup label="Testnets">
+          <option value="84532" selected>Base Sepolia (84532)</option>
+          <option value="11155111">Sepolia (11155111)</option>
+          <option value="421614">Arbitrum Sepolia (421614)</option>
+          <option value="11155420">OP Sepolia (11155420)</option>
+          <option value="99999">ADI Testnet (99999)</option>
+        </optgroup>
+        <optgroup label="Mainnets (testnet only for this tool)">
+          <option value="1">Ethereum (1)</option>
+          <option value="8453">Base (8453)</option>
+          <option value="42161">Arbitrum One (42161)</option>
+          <option value="10">OP Mainnet (10)</option>
+          <option value="137">Polygon (137)</option>
+          <option value="56">BNB Smart Chain (56)</option>
+          <option value="43114">Avalanche (43114)</option>
+          <option value="59144">Linea (59144)</option>
+          <option value="534352">Scroll (534352)</option>
+          <option value="324">zkSync Era (324)</option>
+          <option value="5000">Mantle (5000)</option>
+          <option value="1101">Polygon zkEVM (1101)</option>
+          <option value="999">Hyperliquid EVM (999)</option>
+        </optgroup>
+        <option value="custom">Custom chain ID…</option>
+      </select>
+      <input id="chainIdCustom" placeholder="custom chain ID" style="display: none; margin-top: 6px" />
       <label>PoolManager</label><input id="poolManager" value="0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" />
       <label>OnchainIdAccessGate</label><input id="gate" value="0x5af09be4e3675838Ae1728749424971B094228e8" />
       <label>PoolSwapTest router (reference; recorded in the registry row, not deployed here)</label>

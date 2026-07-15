@@ -78,6 +78,9 @@ function sha256Hex(buf) {
 function listFiles(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
+    // `deploy/` is a co-located browser tool (MetaMask pool-deploy page), served
+    // by Pages but NOT part of the mini-app bundle the wallet downloads/verifies.
+    if (name === 'deploy') continue;
     const full = join(dir, name);
     if (statSync(full).isDirectory()) {
       out.push(...listFiles(full));
