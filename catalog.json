@@ -69,11 +69,11 @@
       "iconName": "arrow.left.arrow.right.circle.fill",
       "statusLabel": "Beta",
       "curatedBy": "Elabify",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "channel": "beta",
       "requiresMaknoonVersion": "0.6.6",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/manifest.json",
-      "manifestSha256": "3528255624cf2d7363a532a01065c5175c4c92e1f2a902a1cf608eda661303b3",
+      "manifestSha256": "468c02d04c210f3681d024072c87a5308f5f9b6edf60df84a0bcb695be896a76",
       "permissions": [
         "wallet.ethereum.read",
         "wallet.ethereum.write",

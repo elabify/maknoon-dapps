@@ -1,10 +1,10 @@
 {
-  "version": "0.1.1",
+  "version": "0.1.2",
   "entry": "index.html",
   "files": [
     {
       "path": "app.js",
-      "sha256": "f02c1c0934ba555dbe5b96e2f7a7bdc4587d07b4fbb661f6c83e4e13fb5febfa"
+      "sha256": "c1c9c5216b94697dc5b4b9df772c6805c87241222743832954f16da0a8a88f3d"
     },
     {
       "path": "i18n.js",

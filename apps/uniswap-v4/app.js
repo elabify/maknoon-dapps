@@ -32,10 +32,11 @@ const CONFIG = {
   pool: {
     poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408", // Base Sepolia v4 PoolManager (verified)
     poolSwapTest: "0x8b5bcc363dde2614281ad875bad385e0a785d3b9", // Base Sepolia PoolSwapTest router (verified)
+    quoter: "0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba",       // Base Sepolia v4 Quoter (receive estimate; fixed Uniswap deployment)
     accessGate: "0x5af09be4e3675838Ae1728749424971B094228e8",   // OnchainIdAccessGate (verified on Basescan)
     hook: "0xBB75553378783dc1390a078E7C07c81EEF1A0080",         // MusnadAccessHook (CREATE2-mined, verified)
-    tokenIn:  { symbol: "AUDD", address: "0xcc2B67931962DF907281C8D66cdb306437eAcC99", decimals: 6 },  // MockAUDD (AUD stablecoin)
-    tokenOut: { symbol: "MMF",  address: "0xf987E964d2C0A76651108c3a671DC81d934D2FF2", decimals: 18 }, // MockMMF (tokenized AUD money-market fund)
+    tokenIn:  { symbol: "AUDD", address: "0xdb3BeA2FEa07f6A03B184f872E3Cd6e7Fa094E7A", decimals: 6 },  // MockAUDD (AUD stablecoin)
+    tokenOut: { symbol: "MMF",  address: "0x1977d6eD61669C6145394D9c4db92dcf2547e546", decimals: 18 }, // MockMMF (tokenized AUD money-market fund)
     fee: 3000,
     tickSpacing: 60,
   },
@@ -47,6 +48,7 @@ const SELECTOR = {
   isAllowed: "babcc539", // isAllowed(address)
   balanceOf: "70a08231", // balanceOf(address)
   swap:      "2229d0b4", // swap((address,address,uint24,int24,address),(bool,int256,uint160),(bool,bool),bytes)
+  quote:     "aa9d21cb", // quoteExactInputSingle(((address,address,uint24,int24,address),bool,uint128,bytes))
 };
 
 // Uniswap v4 TickMath sqrt-price bounds (used as swap price limits).
@@ -99,6 +101,48 @@ function encodeSwap(key, params, testSettings, hookData) {
   const hdLen = encUint(hd.length / 2);
   const hdBody = hd.length ? hd.padEnd(Math.ceil(hd.length / 64) * 64, "0") : "";
   return "0x" + SELECTOR.swap + head + offset + hdLen + hdBody;
+}
+
+// V4Quoter.quoteExactInputSingle(QuoteExactSingleParams) calldata. The single arg
+// is a dynamic struct (it carries `bytes hookData`), so the calldata opens with a
+// 0x20 offset word. Struct layout: PoolKey (5 static words) + zeroForOne +
+// exactAmount (uint128) + hookData offset (=8*32 within the struct) + the empty
+// hookData length word.
+function encodeQuote(key, zeroForOne, exactAmount) {
+  const struct =
+    encAddress(key.currency0) + encAddress(key.currency1) +
+    encUint(key.fee) + encInt(key.tickSpacing) + encAddress(key.hooks) +
+    encBool(zeroForOne) + encUint(exactAmount) + encUint(8 * 32) +
+    encUint(0); // hookData length = 0 (empty)
+  return "0x" + SELECTOR.quote + encUint(32) + struct;
+}
+
+// Real on-chain receive estimate via the Uniswap v4 Quoter (eth_call, which
+// simulates the swap). `from` is the connected wallet so the pool's beforeSwap
+// hook (gate.isAllowed(tx.origin)) passes during the simulation. Returns tokenOut
+// units (BigInt), or null when the quote can't be produced (wallet not verified,
+// no liquidity, missing quoter) so the caller falls back to the placeholder.
+async function quoteReceive(exactAmount) {
+  if (!state.address || !CONFIG.pool.quoter) return null;
+  const sp = sortedPool();
+  const key = {
+    currency0: sp.currency0,
+    currency1: sp.currency1,
+    fee: CONFIG.pool.fee,
+    tickSpacing: CONFIG.pool.tickSpacing,
+    hooks: CONFIG.pool.hook,
+  };
+  try {
+    const out = await eth("eth_call", [
+      { to: CONFIG.pool.quoter, from: state.address, data: encodeQuote(key, sp.zeroForOne, exactAmount) },
+      "latest",
+    ]);
+    const hex = stripHex(out);
+    if (hex.length < 64) return null;
+    return BigInt("0x" + hex.slice(0, 64)); // amountOut is the first return word
+  } catch (e) {
+    return null;
+  }
 }
 
 // --- reads ------------------------------------------------------------------
@@ -281,6 +325,13 @@ function toUnits(amount, decimals) {
   const fracPadded = (frac + "0".repeat(decimals)).slice(0, decimals);
   return BigInt((whole || "0") + fracPadded);
 }
+function fromUnits(units, decimals) {
+  // integer token units -> trimmed decimal string (inverse of toUnits).
+  const s = BigInt(units).toString().padStart(decimals + 1, "0");
+  const whole = s.slice(0, s.length - decimals);
+  const frac = s.slice(s.length - decimals).replace(/0+$/, "");
+  return frac ? `${whole}.${frac}` : whole;
+}
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function clearErr() { const e = $("#gateError"); e.classList.add("hidden"); e.textContent = ""; }
 function showErr(e) {
@@ -293,12 +344,21 @@ function esc(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-$("#payAmount").addEventListener("input", () => {
-  const v = parseFloat($("#payAmount").value || "0");
+let quoteSeq = 0;
+$("#payAmount").addEventListener("input", async () => {
+  const raw = $("#payAmount").value || "0";
+  const v = parseFloat(raw);
   const btn = $("#swapBtn");
   btn.disabled = !(v > 0);
   btn.textContent = v > 0 ? t("btn_swap") : t("btn_enter_amount");
-  $("#getAmount").textContent = v > 0 ? t("quoted_onchain") : "0.0";
+  if (!(v > 0)) { $("#getAmount").textContent = "0.0"; return; }
+  // Show the placeholder immediately, then replace it with the real Quoter
+  // estimate. If the quote can't be produced, the placeholder stands.
+  $("#getAmount").textContent = t("quoted_onchain");
+  const seq = ++quoteSeq;
+  const out = await quoteReceive(toUnits(raw, CONFIG.pool.tokenIn.decimals));
+  if (seq !== quoteSeq) return; // a newer keystroke superseded this quote
+  if (out != null) $("#getAmount").textContent = fromUnits(out, CONFIG.pool.tokenOut.decimals);
 });
 $("#swapBtn").addEventListener("click", doSwap);
 $("#closeOverlay").addEventListener("click", () => overlay(false));
