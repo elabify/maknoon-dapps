@@ -57,10 +57,10 @@ const APP_META = {
     entry: "index.html",
     channels: [
       {
-        channel: "beta", version: "0.1.2", manifestFile: "manifest.json",
-        requiresMaknoon: "0.6.6",
+        channel: "beta", version: "0.1.3", manifestFile: "manifest.json",
+        requiresMaknoon: "0.6.7",
         capabilities: [
-          { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and switch to Base Sepolia" },
+          { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and discover credential-gated pools" },
           { name: "wallet.ethereum.write", reason: "Submit your approve and swap transactions (you approve each one)" },
           { name: "identity", reason: "Prove you are a verified, non-sanctioned human to access the pool" },
         ],

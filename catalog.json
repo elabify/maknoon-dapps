@@ -65,15 +65,15 @@
       "id": "uniswap-v4",
       "title": "UniswapV4",
       "summary": "Swap in a credential-gated Uniswap v4 pool.",
-      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain identity (ONCHAINID) unlocks the pool. Swaps settle on the network you are connected to. The pilot pool trades a mock AUD stablecoin (AUDD) for a mock tokenized AUD money-market fund (MMF) on Base Sepolia.",
+      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain identity (ONCHAINID) unlocks the pool. Pools are discovered from the issuer registry (or entered manually), token details are read on-chain, and each swap shows its rate, fee tier, and minimum received. Swaps settle on the network you are connected to. The pilot pool trades a mock AUD stablecoin (AUDD) for a mock tokenized AUD money-market fund (MMF) on Base Sepolia.",
       "iconName": "arrow.left.arrow.right.circle.fill",
       "statusLabel": "Beta",
       "curatedBy": "Elabify",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "channel": "beta",
-      "requiresMaknoonVersion": "0.6.6",
+      "requiresMaknoonVersion": "0.6.7",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/manifest.json",
-      "manifestSha256": "468c02d04c210f3681d024072c87a5308f5f9b6edf60df84a0bcb695be896a76",
+      "manifestSha256": "c4beda43a66f665efe3a09110c0d70751d9c276c7be33441144276be80c5af8d",
       "permissions": [
         "wallet.ethereum.read",
         "wallet.ethereum.write",
@@ -82,7 +82,7 @@
       "capabilities": [
         {
           "name": "wallet.ethereum.read",
-          "reason": "Read Ethereum chain state and switch to Base Sepolia"
+          "reason": "Read Ethereum chain state and discover credential-gated pools"
         },
         {
           "name": "wallet.ethereum.write",

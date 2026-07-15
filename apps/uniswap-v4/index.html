@@ -19,6 +19,29 @@
 
     <!-- connect / gate state -->
     <section id="gateCard" class="card gate">
+      <!-- pool discovery: choose a registry pool, or enter one manually -->
+      <div id="poolPicker" class="pool-picker hidden">
+        <label class="pool-label" data-i18n="pool_label">Pool</label>
+        <select id="poolSelect" class="pool-select"></select>
+        <details class="pool-manual">
+          <summary data-i18n="pool_manual_summary">Enter a pool manually</summary>
+          <div class="pool-manual-body">
+            <label data-i18n="mf_name">Name</label><input id="mf_name" />
+            <label data-i18n="mf_chainId">Chain ID</label><input id="mf_chainId" inputmode="numeric" />
+            <label data-i18n="mf_poolManager">PoolManager</label><input id="mf_poolManager" placeholder="0x…" />
+            <label data-i18n="mf_gate">Access gate</label><input id="mf_gate" placeholder="0x…" />
+            <label data-i18n="mf_hook">Hook</label><input id="mf_hook" placeholder="0x…" />
+            <label data-i18n="mf_tokenA">Token A (you pay)</label><input id="mf_tokenA" placeholder="0x…" />
+            <label data-i18n="mf_tokenB">Token B (you receive)</label><input id="mf_tokenB" placeholder="0x…" />
+            <div class="pool-manual-row">
+              <div><label data-i18n="mf_fee">Fee</label><input id="mf_fee" inputmode="numeric" value="3000" /></div>
+              <div><label data-i18n="mf_tickSpacing">Tick spacing</label><input id="mf_tickSpacing" inputmode="numeric" value="60" /></div>
+            </div>
+            <button id="mf_add" class="ghost-btn" data-i18n="pool_manual_add">Use this pool</button>
+            <p id="mf_err" class="gate-error hidden"></p>
+          </div>
+        </details>
+      </div>
       <div id="gateIcon" class="gate-icon">🔒</div>
       <h2 id="gateTitle" class="gate-title" data-i18n="gate_connect_title">Connect your wallet</h2>
       <p id="gateBody" class="gate-body" data-i18n="gate_connect_body">This pool only admits verified, non-sanctioned humans.</p>
@@ -54,6 +77,11 @@
           <span id="getSym" class="leg-sym">MMF</span>
         </div>
         <div id="getAmount" class="leg-input readonly">0.0</div>
+      </div>
+      <div id="swapDetail" class="swap-detail hidden">
+        <div class="detail-row"><span data-i18n="detail_rate">Rate</span><span id="rateVal">—</span></div>
+        <div class="detail-row"><span data-i18n="detail_fee">Fee tier</span><span id="feeVal">—</span></div>
+        <div class="detail-row"><span data-i18n="detail_min">Min received</span><span id="minVal">—</span></div>
       </div>
       <button id="swapBtn" class="primary-btn" data-i18n="btn_swap" disabled>Enter an amount</button>
     </section>

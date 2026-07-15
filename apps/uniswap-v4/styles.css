@@ -27,6 +27,27 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
   padding: 18px; margin-bottom: 14px; }
 .hidden { display: none !important; }
 
+.pool-picker { text-align: left; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.pool-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.pool-select { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.pool-manual { margin-top: 10px; }
+.pool-manual > summary { color: var(--muted); font-size: 12px; cursor: pointer; list-style: none; }
+.pool-manual > summary::-webkit-details-marker { display: none; }
+.pool-manual > summary::before { content: "＋ "; }
+.pool-manual[open] > summary::before { content: "－ "; }
+.pool-manual-body { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+.pool-manual-body label { color: var(--muted); font-size: 11px; margin-top: 6px; }
+.pool-manual-body input { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+.pool-manual-row { display: flex; gap: 10px; }
+.pool-manual-row > div { flex: 1; }
+.pool-manual-body .ghost-btn { margin-top: 12px; }
+
+.swap-detail { margin: 8px 2px 4px; display: flex; flex-direction: column; gap: 6px; }
+.detail-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.detail-row span:last-child { color: var(--text); font-weight: 600; }
+
 .gate { text-align: center; }
 .gate-icon { font-size: 34px; margin-bottom: 8px; }
 .gate-title { margin: 4px 0; font-size: 18px; }
