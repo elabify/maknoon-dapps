@@ -1,14 +1,14 @@
 {
-  "version": "0.1.4",
+  "version": "0.1.5",
   "entry": "index.html",
   "files": [
     {
       "path": "app.js",
-      "sha256": "34a81f942d52dded5f0c603d2472d81cd32e96049edaef6155964fde89a5ff37"
+      "sha256": "84438de4b9386d6a2ba47c3f12ae1b8bcef1eed4f437f29911de1fdc781a4bbc"
     },
     {
       "path": "i18n.js",
-      "sha256": "99928007b3009ed0e2247cf78041d39824399337a305ee25fb746aa823adb5f9"
+      "sha256": "44040acf8a7682996740f27d5963acb5b6bf73215ead4a25a29f9bccd1393566"
     },
     {
       "path": "index.html",

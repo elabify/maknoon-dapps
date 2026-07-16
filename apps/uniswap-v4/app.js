@@ -308,6 +308,14 @@ async function refreshGate() {
 // the on-chain grant / ONCHAINID claim.
 async function verifyToAccess() {
   clearErr();
+  // Show a processing overlay: the native grant does several sequential on-chain
+  // writes (create identity -> register -> add claim) and can take up to a minute
+  // on slow chains, with no visible activity otherwise. The native disclosure +
+  // Face ID sheets appear on top; this overlay is what the user sees during the
+  // on-chain write while the app awaits poolAccess.grant.
+  overlay(true);
+  renderSteps([{ key: "grant", label: t("step_granting") }]);
+  setStep("grant", "active");
   try {
     // The host performs the whole grant natively (mirrors commerce): it discloses
     // a passport, sanctions-clean presentation, proves control of this EVM address
@@ -333,9 +341,17 @@ async function verifyToAccess() {
       state.allowed = await isAllowed(state.address).catch(() => false);
     }
     state.credId = res.walletAddress || state.address;
+    setStep("grant", "ok");
+    result("ok", `<h3>${esc(t("access_granted"))}</h3>`);
+    await sleep(700);
+    overlay(false);
     renderGate();
   } catch (e) {
-    showErr(e);
+    const msg = (e && (e.message || String(e))) || t("err_generic");
+    if (/reject|denied|cancel/i.test(msg)) { overlay(false); return; } // user backed out
+    setStep("grant", "bad");
+    result("bad", `<h3>${esc(t("verify_failed"))}</h3><p>${esc(msg)}</p>`);
+    // Leave the overlay open with its Close button so the error + a retry path stay visible.
   }
 }
 
