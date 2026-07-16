@@ -33,6 +33,9 @@ const CONFIG = {
 // deployments, so they live here keyed by chainId. A chain with no entry can
 // still be gated + read (isAllowed / grant work via the bridge), but swaps + the
 // receive estimate are disabled until its infra is filled in.
+// A pool row (from the issuer registry OR manual entry) MAY carry its own
+// poolSwapTest/quoter/explorer; when it does, those win. This map is only the
+// per-chain default for the chains we operate, used when a row omits them.
 const CHAIN_INFRA = {
   84532: {
     label: "Base Sepolia",
@@ -40,25 +43,13 @@ const CHAIN_INFRA = {
     poolSwapTest: "0x8b5bcc363dde2614281ad875bad385e0a785d3b9", // PoolSwapTest router (verified)
     quoter: "0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba",       // v4 Quoter (fixed Uniswap deployment)
   },
-};
-
-// Fallback if the host predates window.maknoon.pools.list or the registry is
-// unreachable: the pilot Base Sepolia AUDD -> MMF pool (same shape as a /v1/pools
-// row). Keeps the demo working offline / on older builds.
-const FALLBACK_POOLS = [
-  {
-    name: "AUDD / MMF",
-    chainId: 84532,
-    caip2: "eip155:84532",
-    poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408",
-    gate: "0x5af09be4e3675838Ae1728749424971B094228e8",
-    hook: "0xBB75553378783dc1390a078E7C07c81EEF1A0080",
-    fee: 3000,
-    tickSpacing: 60,
-    tokenA: "0xdb3BeA2FEa07f6A03B184f872E3Cd6e7Fa094E7A", // MockAUDD (you pay)
-    tokenB: "0x1977d6eD61669C6145394D9c4db92dcf2547e546", // MockMMF (you receive)
+  11155111: {
+    label: "Sepolia",
+    explorer: "https://sepolia.etherscan.io",
+    poolSwapTest: "0x9b6b46e2c869aa39918db7f52f5557fe577b6eee", // PoolSwapTest router (Uniswap Sepolia)
+    quoter: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",       // V4Quoter (Uniswap Sepolia)
   },
-];
+};
 
 // Function selectors (keccak256(signature)[0:4], computed with `cast sig`):
 const SELECTOR = {
@@ -204,9 +195,12 @@ function sortedPool() {
 }
 
 // --- pool discovery ---------------------------------------------------------
-// Build the internal pool object from a registry row: enrich with per-chain
-// infra + a chain label, and default direction to tokenA (pay) -> tokenB (receive).
-function makePool(row) {
+// Build the internal pool object from a row (issuer registry OR manual entry).
+// Infra (router/quoter/explorer) is taken from the row when present, else the
+// per-chain CHAIN_INFRA default, so pools on any chain work when their addresses
+// are supplied. `source` records provenance for the picker caption. Direction
+// defaults to tokenA (pay) -> tokenB (receive).
+function makePool(row, source) {
   const chainId = Number(row.chainId);
   const infra = CHAIN_INFRA[chainId] || {};
   return {
@@ -215,32 +209,36 @@ function makePool(row) {
     chainIdHex: "0x" + chainId.toString(16),
     caip2: row.caip2 || ("eip155:" + chainId),
     chainLabel: infra.label || ("Chain " + chainId),
-    explorer: infra.explorer || null,
+    explorer: row.explorer || infra.explorer || null,
     poolManager: row.poolManager,
-    poolSwapTest: infra.poolSwapTest || null,
-    quoter: infra.quoter || null,
+    poolSwapTest: row.poolSwapTest || infra.poolSwapTest || null,
+    quoter: row.quoter || infra.quoter || null,
     accessGate: row.gate,
     hook: row.hook,
     fee: Number(row.fee),
     tickSpacing: Number(row.tickSpacing),
     tokenIn:  { address: row.tokenA, symbol: null, decimals: null },
     tokenOut: { address: row.tokenB, symbol: null, decimals: null },
+    source: source || { kind: "manual" },
   };
 }
 
 // Read the issuer's pool registry through the native bridge (the sandbox has no
-// fetch). Falls back to the pilot pool on an older host or a network failure.
+// fetch). No built-in fallback: pools come only from the issuer registry or the
+// user's manual entry. An unreachable/empty registry leaves the list empty and
+// the manual-entry form is the way in.
 async function loadPools() {
-  let rows = null;
+  let rows = [];
   try {
     if (window.maknoon && window.maknoon.pools && window.maknoon.pools.list) {
       const res = await window.maknoon.pools.list({ issuerUrl: CONFIG.issuerBaseUrl });
-      if (res && Array.isArray(res.pools) && res.pools.length) rows = res.pools;
+      if (res && Array.isArray(res.pools)) rows = res.pools;
     }
-  } catch (e) { /* old host or offline: fall back below */ }
-  if (!rows || !rows.length) rows = FALLBACK_POOLS;
-  state.pools = rows.map(makePool);
-  state.pool = state.pools[0];
+  } catch (e) { /* registry unreachable: leave empty, user can add manually */ }
+  let host = "";
+  try { host = new URL(CONFIG.issuerBaseUrl).host; } catch (e) {}
+  state.pools = rows.map((r) => makePool(r, { kind: "issuer", host }));
+  state.pool = state.pools[0] || null;
 }
 
 function populatePoolSelect() {
@@ -248,10 +246,21 @@ function populatePoolSelect() {
   sel.innerHTML = state.pools
     .map((p, i) => `<option value="${i}">${esc(p.name)} · ${esc(p.chainLabel)}</option>`)
     .join("");
-  sel.value = String(Math.max(0, state.pools.indexOf(state.pool)));
-  // Only show the picker chrome when there's a real choice; a single pool just
-  // renders in the gate below.
-  $("#poolPicker").classList.toggle("hidden", state.pools.length <= 1 && !state.showManual);
+  if (state.pool) sel.value = String(Math.max(0, state.pools.indexOf(state.pool)));
+  // The picker + manual-entry are ALWAYS available (this block also hosts the
+  // "enter a pool manually" form). Show an empty hint + the provenance caption.
+  $("#poolEmpty").classList.toggle("hidden", state.pools.length > 0);
+  renderPoolSource();
+}
+
+// Caption under the picker: where the selected pool came from.
+function renderPoolSource() {
+  const cap = $("#poolSource");
+  const p = state.pool;
+  if (!p) { cap.textContent = ""; return; }
+  cap.textContent = p.source && p.source.kind === "issuer"
+    ? t("src_issuer", { host: p.source.host })
+    : t("src_manual");
 }
 
 // Switch to a pool: reset gate state, update the chip, and (if already connected)
@@ -262,12 +271,14 @@ async function selectPool(i) {
   state.allowed = false;
   state.credId = null;
   $("#netChip").textContent = state.pool.chainLabel;
+  renderPoolSource();
   if (state.address) { await connectAndGate(); } else { renderGate(); }
 }
 
 // --- flow -------------------------------------------------------------------
 async function connectAndGate() {
   clearErr();
+  if (!state.pool) { showErr(new Error(t("err_no_pool"))); return; }
   try {
     const accts = await eth("eth_requestAccounts");
     state.address = (accts && accts[0]) || null;
@@ -390,8 +401,9 @@ function renderGate() {
   if (!connected) {
     $("#gateIcon").textContent = "🔒";
     $("#gateTitle").textContent = t("gate_connect_title");
-    $("#gateBody").textContent = t("gate_connect_body");
+    $("#gateBody").textContent = state.pool ? t("gate_connect_body") : t("gate_no_pool_body");
     $("#gateBtn").textContent = t("btn_connect");
+    $("#gateBtn").disabled = !state.pool;
     $("#gateBtn").onclick = connectAndGate;
   } else {
     $("#gateIcon").textContent = "🪪";
@@ -451,6 +463,13 @@ function mfAddr(id) {
   if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t("mf_bad_addr"));
   return v;
 }
+// Optional address field: blank -> undefined (falls back to CHAIN_INFRA), else validated.
+function mfAddrOpt(id) {
+  const v = mfVal(id);
+  if (!v) return undefined;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t("mf_bad_addr"));
+  return v;
+}
 function addManualPool() {
   const err = $("#mf_err");
   err.classList.add("hidden");
@@ -471,8 +490,12 @@ function addManualPool() {
       tickSpacing,
       tokenA: mfAddr("mf_tokenA"),
       tokenB: mfAddr("mf_tokenB"),
+      // Optional per-pool infra; blank falls back to the chain default (CHAIN_INFRA).
+      poolSwapTest: mfAddrOpt("mf_poolSwapTest"),
+      quoter: mfAddrOpt("mf_quoter"),
+      explorer: mfVal("mf_explorer") || undefined,
     };
-    state.pools.push(makePool(row));
+    state.pools.push(makePool(row, { kind: "manual" }));
     populatePoolSelect();
     selectPool(state.pools.length - 1);
   } catch (e) {
@@ -553,6 +576,6 @@ $("#mf_add").addEventListener("click", addManualPool);
 
   await loadPools();
   populatePoolSelect();
-  $("#netChip").textContent = state.pool.chainLabel;
+  $("#netChip").textContent = state.pool ? state.pool.chainLabel : t("chip_no_pool");
   renderGate();
 })();

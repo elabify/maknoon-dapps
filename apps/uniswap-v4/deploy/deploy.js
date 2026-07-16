@@ -33,12 +33,28 @@ const DEFAULT_RPC = {
   11155111: 'https://ethereum-sepolia-rpc.publicnode.com', // Ethereum Sepolia
 };
 
-// Base Sepolia defaults (all overridable in the form).
+// Per-chain infra defaults. ONLY the two chains we operate get prefilled; every
+// other chain (mainnets, other testnets) starts blank, so the operator must paste
+// + verify the addresses for that chain. `quoter` is the Uniswap V4Quoter the
+// mini-app uses for its receive estimate (recorded in the registry row, not used
+// by the deploy itself).
+const CHAIN_DEFAULTS = {
+  84532: { // Base Sepolia
+    poolManager: '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408',
+    gate: '0x5af09be4e3675838Ae1728749424971B094228e8',
+    poolSwapTest: '0x8b5bcc363dde2614281ad875bad385e0a785d3b9',
+    quoter: '0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba',
+  },
+  11155111: { // Ethereum Sepolia
+    poolManager: '0xE03A1074c86CFeDd5C142C4F04F1a1536e203543',
+    gate: '0x481b1EaC56190fF8690d64204aF85A100Ae5487f',
+    poolSwapTest: '0x9b6b46e2c869aa39918db7f52f5557fe577b6eee',
+    quoter: '0x61b3f2011a92d183c7dbadbda940a7555ccf9227',
+  },
+};
+
 const DEFAULTS = {
   chainId: 84532,
-  poolManager: '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408',
-  gate: '0x5af09be4e3675838Ae1728749424971B094228e8',
-  poolSwapTest: '0x8b5bcc363dde2614281ad875bad385e0a785d3b9',
   tokenA: { name: 'Mock AUDD', symbol: 'AUDD', decimals: 6 },
   tokenB: { name: 'Mock AUD Money Market Fund', symbol: 'MMF', decimals: 18 },
   rate: '1', // tokenB per tokenA, in value
@@ -164,6 +180,48 @@ function selectedChainId() {
   return parseInt(sel, 10) || DEFAULTS.chainId;
 }
 
+const INFRA_FIELDS = ['poolManager', 'gate', 'poolSwapTest', 'quoter'];
+
+// Fill (or blank) the infra inputs for the selected chain. Only the chains in
+// CHAIN_DEFAULTS have known addresses; every other chain blanks the fields so the
+// operator supplies + verifies them. Re-runs verification for whatever is filled.
+function applyChainDefaults() {
+  let chainId;
+  try { chainId = selectedChainId(); } catch (e) { chainId = null; }
+  const d = (chainId && CHAIN_DEFAULTS[chainId]) || {};
+  for (const id of INFRA_FIELDS) {
+    $(id).value = d[id] || '';
+    verifyField(id);
+  }
+}
+
+// A read provider for contract sanity checks before/without a wallet connection:
+// the live reader if connected, else a known per-chain RPC, else none.
+function fieldReader() {
+  if (state.reader) return state.reader;
+  let cid; try { cid = selectedChainId(); } catch (e) { return null; }
+  return DEFAULT_RPC[cid] ? new ethers.JsonRpcProvider(DEFAULT_RPC[cid], cid) : null;
+}
+
+// Sanity-check one infra address and reflect it in the field's ✓/✗ indicator:
+// blank -> neutral, non-address -> ✗, no reader -> "?", has code -> ✓, else ✗.
+async function verifyField(id) {
+  const box = $(id + 'Chk');
+  if (!box) return;
+  const addr = $(id).value.trim();
+  const set = (cls, mark, title) => { box.className = 'verified-chk ' + cls; box.textContent = mark; box.title = title; };
+  if (!addr) { set('', '', ''); return; }
+  if (!ethers.isAddress(addr)) { set('bad', '✗', 'not a valid address'); return; }
+  const reader = fieldReader();
+  if (!reader) { set('pending', '?', 'connect (or pick a known chain) to verify'); return; }
+  set('pending', '…', 'checking');
+  try {
+    const code = await reader.getCode(addr);
+    const ok = code && code !== '0x';
+    set(ok ? 'ok' : 'bad', ok ? '✓' : '✗', ok ? 'contract verified on-chain' : 'no contract code at this address');
+  } catch (e) { set('pending', '?', 'could not reach the chain to verify'); }
+}
+
 async function connect() {
   const chainId = selectedChainId();
   state.chainId = chainId;
@@ -194,6 +252,7 @@ async function connect() {
   await loadArtifacts();
   $('account').textContent = state.account;
   log(`connected ${state.account} on chain ${chainId}`);
+  INFRA_FIELDS.forEach(verifyField); // now that we have a live reader
   $('btn-deploy').disabled = false;
   $('btn-mint').disabled = false;
 }
@@ -242,7 +301,7 @@ function mineHook(initcode) {
   throw new Error('no CREATE2 salt with BEFORE_SWAP_FLAG');
 }
 
-async function sanityCheckInfra(poolManager, gate, poolSwapTest) {
+async function sanityCheckInfra(poolManager, gate, poolSwapTest, quoter) {
   for (const [label, addr] of [['poolManager', poolManager], ['gate', gate], ['poolSwapTest', poolSwapTest]]) {
     if (!ethers.isAddress(addr)) throw new Error(`${label} is not an address: ${addr}`);
     const code = await state.reader.getCode(addr);
@@ -255,16 +314,27 @@ async function sanityCheckInfra(poolManager, gate, poolSwapTest) {
   } catch (e) {
     throw new Error(`gate ${gate} does not answer isAllowed(address): ${e?.shortMessage || e?.message}`);
   }
+  // Quoter is optional for the deploy (the mini-app uses it for the receive
+  // estimate), but if given it must be a real contract or the registry row is bad.
+  if (quoter) {
+    if (!ethers.isAddress(quoter)) throw new Error(`quoter is not an address: ${quoter}`);
+    const code = await state.reader.getCode(quoter);
+    if (!code || code === '0x') throw new Error(`quoter has no contract code at ${quoter}`);
+  } else {
+    log('WARNING: no Quoter set -- the mini-app will not show a receive estimate for this pool.');
+  }
 }
 
 async function runDeploy() {
   try {
     $('btn-deploy').disabled = true;
-    const poolManager = $('poolManager').value.trim() || DEFAULTS.poolManager;
-    const gate = $('gate').value.trim() || DEFAULTS.gate;
-    const poolSwapTest = $('poolSwapTest').value.trim() || DEFAULTS.poolSwapTest;
+    const cd = CHAIN_DEFAULTS[state.chainId] || {};
+    const poolManager = $('poolManager').value.trim() || cd.poolManager || '';
+    const gate = $('gate').value.trim() || cd.gate || '';
+    const poolSwapTest = $('poolSwapTest').value.trim() || cd.poolSwapTest || '';
+    const quoter = $('quoter').value.trim() || cd.quoter || '';
     const poolName = $('poolName').value.trim() || 'Credential-gated pool';
-    await sanityCheckInfra(poolManager, gate, poolSwapTest);
+    await sanityCheckInfra(poolManager, gate, poolSwapTest, quoter);
 
     // 1. Tokens (deploy or reuse).
     const tokenA = await resolveToken('A');
@@ -323,7 +393,7 @@ async function runDeploy() {
     );
     log('liquidity seeded');
 
-    state.deployed = { tokenA, tokenB, hook, lpRouter, poolManager, gate, poolSwapTest, poolName, fee: FEE, tickSpacing: TICK_SPACING };
+    state.deployed = { tokenA, tokenB, hook, lpRouter, poolManager, gate, poolSwapTest, quoter, poolName, fee: FEE, tickSpacing: TICK_SPACING };
     renderResults();
     log('DONE. Copy the registry row into the issuer pool registry / dapp.');
   } catch (e) {
@@ -348,7 +418,7 @@ async function runMint() {
 
 function registryRow() {
   const d = state.deployed;
-  return {
+  const row = {
     name: d.poolName,
     chainId: state.chainId,
     caip2: `eip155:${state.chainId}`,
@@ -359,20 +429,25 @@ function registryRow() {
     tickSpacing: d.tickSpacing,
     tokenA: d.tokenA.address,
     tokenB: d.tokenB.address,
+    poolSwapTest: d.poolSwapTest,
   };
+  if (d.quoter) row.quoter = d.quoter; // optional; enables the mini-app receive estimate
+  return row;
 }
+
+const CSV_COLS = ['name', 'chainId', 'poolManager', 'gate', 'hook', 'fee', 'tickSpacing', 'tokenA', 'tokenB', 'poolSwapTest', 'quoter'];
 
 function renderResults() {
   const d = state.deployed;
   const row = registryRow();
-  const csv = `${row.name},${row.chainId},${row.poolManager},${row.gate},${row.hook},${row.fee},${row.tickSpacing},${row.tokenA},${row.tokenB}`;
+  const csv = CSV_COLS.map((c) => row[c] != null ? row[c] : '').join(',');
   const rows = [
     ['tokenA', `${d.tokenA.symbol} (${d.tokenA.decimals}) ${d.tokenA.address}`],
     ['tokenB', `${d.tokenB.symbol} (${d.tokenB.decimals}) ${d.tokenB.address}`],
     ['hook', d.hook],
     ['lpRouter', d.lpRouter],
     ['registry JSON', JSON.stringify(row)],
-    ['registry CSV', 'name,chainId,poolManager,gate,hook,fee,tickSpacing,tokenA,tokenB\n' + csv],
+    ['registry CSV', CSV_COLS.join(',') + '\n' + csv],
   ];
   const box = $('results');
   box.innerHTML = '';
@@ -406,7 +481,13 @@ window.addEventListener('DOMContentLoaded', () => {
   wireModeToggle('A');
   wireModeToggle('B');
   const chainSel = $('chainSelect');
-  const toggleCustomChain = () => { $('chainIdCustom').style.display = chainSel.value === 'custom' ? '' : 'none'; };
-  chainSel.addEventListener('change', toggleCustomChain);
-  toggleCustomChain();
+  const onChainChange = () => {
+    $('chainIdCustom').style.display = chainSel.value === 'custom' ? '' : 'none';
+    applyChainDefaults(); // prefill known chains, blank the rest
+  };
+  chainSel.addEventListener('change', onChainChange);
+  $('chainIdCustom').addEventListener('input', applyChainDefaults);
+  // Re-verify a field whenever the operator edits it.
+  INFRA_FIELDS.forEach((id) => $(id).addEventListener('blur', () => verifyField(id)));
+  onChainChange(); // sync fields to the default-selected chain on load
 });

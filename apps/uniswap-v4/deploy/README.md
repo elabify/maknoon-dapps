@@ -9,11 +9,15 @@ has MetaMask:
 
 Your **MetaMask signs every transaction** — there is no server, no raw key, and no secret handled
 here. It cannot run inside the Maknoon wallet mini-app host (that bridge rejects contract-creation
-txs), so it is a standalone page, not a mini-app. Testnet only; never point it at mainnet.
+txs), so it is a standalone page, not a mini-app. Testnets are the expected target; a credential-gated
+pool only works on a chain that has the ONCHAINID access stack + gate deployed.
 
 ## What it does
 
-1. Connect MetaMask on the chosen chain (default Base Sepolia, `84532`).
+1. Connect MetaMask on the chosen chain. **Base Sepolia (`84532`)** and **Sepolia (`11155111`)** prefill
+   their PoolManager / gate / PoolSwapTest / V4Quoter; every other chain starts blank, so you paste the
+   infra addresses yourself. Each infra field sanity-checks the pasted address on-chain and shows a
+   **✓** (contract found) or **✗** next to it.
 2. For each of two tokens: **deploy** a fresh `MockConfigurableERC20(name, symbol, decimals)` (defaults
    AUDD 6-dec / MMF 18-dec), or **reuse** an existing ERC-20 by address (its name/symbol/decimals are
    read + shown as a sanity check).
@@ -23,9 +27,9 @@ txs), so it is a standalone page, not a mini-app. Testnet only; never point it a
    deployed at its deterministic address), initialize the pool, and seed full-range liquidity
    (~1,000,000 units of value each side).
 5. Print a **registry row** (JSON + CSV) to paste into the issuer pool registry / dapp:
-   `name, chainId, poolManager, gate, hook, fee, tickSpacing, tokenA, tokenB`.
+   `name, chainId, poolManager, gate, hook, fee, tickSpacing, tokenA, tokenB, poolSwapTest, quoter`.
 
-Overridable + sanity-checked infra: `poolManager`, `gate`, `poolSwapTest`.
+Overridable + sanity-checked infra: `poolManager`, `gate`, `poolSwapTest`, `quoter`.
 
 ## Notes
 

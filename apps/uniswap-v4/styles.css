@@ -31,6 +31,8 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
 .pool-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; }
 .pool-select { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
   border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.pool-source { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
+.pool-empty { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
 .pool-manual { margin-top: 10px; }
 .pool-manual > summary { color: var(--muted); font-size: 12px; cursor: pointer; list-style: none; }
 .pool-manual > summary::-webkit-details-marker { display: none; }

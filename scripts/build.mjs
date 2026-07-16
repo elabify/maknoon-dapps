@@ -57,7 +57,7 @@ const APP_META = {
     entry: "index.html",
     channels: [
       {
-        channel: "beta", version: "0.1.3", manifestFile: "manifest.json",
+        channel: "beta", version: "0.1.4", manifestFile: "manifest.json",
         requiresMaknoon: "0.6.7",
         capabilities: [
           { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and discover credential-gated pools" },

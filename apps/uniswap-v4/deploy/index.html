@@ -16,6 +16,12 @@
       label { display: block; font-size: 12px; opacity: 0.8; margin-top: 8px; }
       input, select { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid #8886; }
       .radio { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; margin-right: 14px; }
+      .infra-field { display: flex; align-items: center; gap: 8px; }
+      .infra-field input { flex: 1; }
+      .verified-chk { font-size: 14px; width: 1.2em; text-align: center; flex: none; }
+      .verified-chk.ok { color: #1a7f37; }
+      .verified-chk.bad { color: #cf222e; }
+      .verified-chk.pending { color: #999; }
       button { cursor: pointer; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid #8886; background: #2563eb; color: #fff; }
       button:disabled { opacity: 0.5; cursor: not-allowed; }
       button.secondary { background: transparent; color: inherit; }
@@ -31,43 +37,47 @@
     <p class="warn">
       Public browser tool. Your MetaMask signs every transaction, so there is no server secret and no
       key handled here. Deploys (or reuses) two ERC-20 tokens and a credential-gated UniswapV4 pool.
-      Testnet only, never mainnet.
+      Base Sepolia and Sepolia are prefilled; on any other chain, paste the infra addresses yourself.
     </p>
 
     <div class="card">
       <button id="btn-connect">Connect MetaMask</button>
       <span style="margin-left: 10px; font-size: 12px">account: <code id="account">not connected</code></span>
-      <label>Chain (Maknoon wallet EVM networks; reads use a known RPC or MetaMask)</label>
+      <label>Chain (Maknoon wallet EVM chains; reads use a known RPC or MetaMask)</label>
       <select id="chainSelect">
-        <optgroup label="Testnets">
-          <option value="84532" selected>Base Sepolia (84532)</option>
-          <option value="11155111">Sepolia (11155111)</option>
-          <option value="421614">Arbitrum Sepolia (421614)</option>
-          <option value="11155420">OP Sepolia (11155420)</option>
-          <option value="99999">ADI Testnet (99999)</option>
-        </optgroup>
-        <optgroup label="Mainnets (testnet only for this tool)">
+        <optgroup label="Mainnets">
           <option value="1">Ethereum (1)</option>
-          <option value="8453">Base (8453)</option>
           <option value="42161">Arbitrum One (42161)</option>
+          <option value="43114">Avalanche (43114)</option>
+          <option value="8453">Base (8453)</option>
+          <option value="56">BNB Smart Chain (56)</option>
+          <option value="999">Hyperliquid EVM (999)</option>
+          <option value="59144">Linea (59144)</option>
+          <option value="5000">Mantle (5000)</option>
           <option value="10">OP Mainnet (10)</option>
           <option value="137">Polygon (137)</option>
-          <option value="56">BNB Smart Chain (56)</option>
-          <option value="43114">Avalanche (43114)</option>
-          <option value="59144">Linea (59144)</option>
+          <option value="1101">Polygon zkEVM (1101)</option>
           <option value="534352">Scroll (534352)</option>
           <option value="324">zkSync Era (324)</option>
-          <option value="5000">Mantle (5000)</option>
-          <option value="1101">Polygon zkEVM (1101)</option>
-          <option value="999">Hyperliquid EVM (999)</option>
+        </optgroup>
+        <optgroup label="Testnets">
+          <option value="11155111">Sepolia (11155111)</option>
+          <option value="99999">ADI Testnet (99999)</option>
+          <option value="421614">Arbitrum Sepolia (421614)</option>
+          <option value="84532" selected>Base Sepolia (84532)</option>
+          <option value="11155420">OP Sepolia (11155420)</option>
         </optgroup>
         <option value="custom">Custom chain ID…</option>
       </select>
       <input id="chainIdCustom" placeholder="custom chain ID" style="display: none; margin-top: 6px" />
-      <label>PoolManager</label><input id="poolManager" value="0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408" />
-      <label>OnchainIdAccessGate</label><input id="gate" value="0x5af09be4e3675838Ae1728749424971B094228e8" />
-      <label>PoolSwapTest router (reference; recorded in the registry row, not deployed here)</label>
-      <input id="poolSwapTest" value="0x8b5bcc363dde2614281ad875bad385e0a785d3b9" />
+      <label>PoolManager</label>
+      <div class="infra-field"><input id="poolManager" placeholder="0x…" /><span id="poolManagerChk" class="verified-chk"></span></div>
+      <label>OnchainIdAccessGate</label>
+      <div class="infra-field"><input id="gate" placeholder="0x…" /><span id="gateChk" class="verified-chk"></span></div>
+      <label>PoolSwapTest router (recorded in the registry row; the mini-app swaps through it)</label>
+      <div class="infra-field"><input id="poolSwapTest" placeholder="0x…" /><span id="poolSwapTestChk" class="verified-chk"></span></div>
+      <label>V4Quoter (recorded in the registry row; the mini-app receive estimate reads it)</label>
+      <div class="infra-field"><input id="quoter" placeholder="0x…" /><span id="quoterChk" class="verified-chk"></span></div>
     </div>
 
     <div class="card">

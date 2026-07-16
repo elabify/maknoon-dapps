@@ -20,9 +20,11 @@
     <!-- connect / gate state -->
     <section id="gateCard" class="card gate">
       <!-- pool discovery: choose a registry pool, or enter one manually -->
-      <div id="poolPicker" class="pool-picker hidden">
+      <div id="poolPicker" class="pool-picker">
         <label class="pool-label" data-i18n="pool_label">Pool</label>
         <select id="poolSelect" class="pool-select"></select>
+        <p id="poolSource" class="pool-source"></p>
+        <p id="poolEmpty" class="pool-empty hidden" data-i18n="pool_empty">No pools from the issuer yet. Add one manually below.</p>
         <details class="pool-manual">
           <summary data-i18n="pool_manual_summary">Enter a pool manually</summary>
           <div class="pool-manual-body">
@@ -37,6 +39,9 @@
               <div><label data-i18n="mf_fee">Fee</label><input id="mf_fee" inputmode="numeric" value="3000" /></div>
               <div><label data-i18n="mf_tickSpacing">Tick spacing</label><input id="mf_tickSpacing" inputmode="numeric" value="60" /></div>
             </div>
+            <label data-i18n="mf_poolSwapTest">Swap router (optional)</label><input id="mf_poolSwapTest" placeholder="0x… (blank = chain default)" />
+            <label data-i18n="mf_quoter">Quoter (optional)</label><input id="mf_quoter" placeholder="0x… (blank = chain default)" />
+            <label data-i18n="mf_explorer">Explorer URL (optional)</label><input id="mf_explorer" placeholder="https://…" />
             <button id="mf_add" class="ghost-btn" data-i18n="pool_manual_add">Use this pool</button>
             <p id="mf_err" class="gate-error hidden"></p>
           </div>
@@ -96,8 +101,6 @@
         </div>
       </div>
     </div>
-
-    <p class="footnote" data-i18n="footnote">Testnet demo. Tokens are mock AUDD and MMF on Base Sepolia.</p>
   </main>
   <script src="i18n.js"></script>
   <script src="app.js"></script>
