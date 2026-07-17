@@ -14,38 +14,32 @@
         <span class="brand-name">UniswapV4</span>
         <span class="badge badge-beta">Beta</span>
       </div>
-      <button id="netChip" class="net-chip" data-i18n="net_base_sepolia">Base Sepolia</button>
+      <div class="chain-picker">
+        <button id="netChip" class="net-chip" type="button">Base Sepolia ▾</button>
+        <div id="chainMenu" class="chain-menu hidden"></div>
+      </div>
     </header>
 
     <!-- connect / gate state -->
     <section id="gateCard" class="card gate">
-      <!-- pool discovery: choose a registry pool, or enter one manually -->
+      <!-- pool discovery: pick one of this chain's issuer pools, or add one manually -->
       <div id="poolPicker" class="pool-picker">
         <label class="pool-label" data-i18n="pool_label">Pool</label>
         <select id="poolSelect" class="pool-select"></select>
         <p id="poolSource" class="pool-source"></p>
-        <p id="poolEmpty" class="pool-empty hidden" data-i18n="pool_empty">No pools from the issuer yet. Add one manually below.</p>
-        <details class="pool-manual">
-          <summary data-i18n="pool_manual_summary">Enter a pool manually</summary>
+        <p id="poolEmpty" class="pool-empty hidden" data-i18n="pool_empty">No pools on this chain yet. Add one below.</p>
+        <details id="poolManual" class="pool-manual">
+          <summary data-i18n="pool_manual_summary">Add a pool on this chain</summary>
           <div class="pool-manual-body">
-            <label data-i18n="mf_name">Name</label><input id="mf_name" />
-            <label data-i18n="mf_chainId">Chain ID</label><input id="mf_chainId" inputmode="numeric" />
-            <label data-i18n="mf_poolManager">PoolManager</label><input id="mf_poolManager" placeholder="0x…" />
-            <label data-i18n="mf_gate">Access gate</label><input id="mf_gate" placeholder="0x…" />
-            <label data-i18n="mf_hook">Hook</label><input id="mf_hook" placeholder="0x…" />
+            <p class="pool-manual-hint" data-i18n="mf_hint">Enter the two tokens. The fee tier and whether the pool is credential-gated are detected on-chain; the pool manager, quoter, and router come from this chain's Uniswap v4 deployment.</p>
+            <label data-i18n="mf_name">Name (optional)</label><input id="mf_name" />
             <label data-i18n="mf_tokenA">Token A (you pay)</label><input id="mf_tokenA" placeholder="0x…" />
             <label data-i18n="mf_tokenB">Token B (you receive)</label><input id="mf_tokenB" placeholder="0x…" />
-            <div class="pool-manual-row">
-              <div><label data-i18n="mf_fee">Fee</label><input id="mf_fee" inputmode="numeric" value="3000" /></div>
-              <div><label data-i18n="mf_tickSpacing">Tick spacing</label><input id="mf_tickSpacing" inputmode="numeric" value="60" /></div>
-            </div>
-            <label data-i18n="mf_poolSwapTest">Swap router (optional)</label><input id="mf_poolSwapTest" placeholder="0x… (blank = chain default)" />
-            <label data-i18n="mf_quoter">Quoter (optional)</label><input id="mf_quoter" placeholder="0x… (blank = chain default)" />
-            <label data-i18n="mf_explorer">Explorer URL (optional)</label><input id="mf_explorer" placeholder="https://…" />
-            <button id="mf_add" class="ghost-btn" data-i18n="pool_manual_add">Use this pool</button>
+            <button id="mf_add" class="ghost-btn" data-i18n="pool_manual_add">Add pool</button>
             <p id="mf_err" class="gate-error hidden"></p>
           </div>
         </details>
+        <p id="poolNoV4" class="pool-empty hidden" data-i18n="mf_no_v4">Uniswap v4 is not deployed on this chain, so pools cannot be added here.</p>
       </div>
       <div id="gateIcon" class="gate-icon">🔒</div>
       <h2 id="gateTitle" class="gate-title" data-i18n="gate_connect_title">Connect your wallet</h2>
@@ -54,7 +48,7 @@
       <p id="gateError" class="gate-error hidden"></p>
     </section>
 
-    <!-- credential card (shown once verified) -->
+    <!-- credential card (shown once verified, gated pools only) -->
     <section id="credCard" class="card cred hidden">
       <div class="cred-row">
         <span class="cred-check">✓</span>

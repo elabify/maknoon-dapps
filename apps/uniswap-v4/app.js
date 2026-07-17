@@ -1,57 +1,82 @@
 // UniswapV4 credential-gated swap (Beta). A retail swap over the generalized
 // Maknoon web3 bridge (window.ethereum): multi-chain, eth_sendTransaction with
-// contract calldata, and eth_signTypedData_v4. The pool admits only a verified,
-// non-sanctioned, passport-backed human; the gate is read on-chain via
-// accessGate.isAllowed(address), which is gate-agnostic (works with the
-// ONCHAINID / ERC-3643 gate or the fallback registry).
+// contract calldata, and eth_signTypedData_v4.
 //
-// Pools are DISCOVERED, not hardcoded: window.maknoon.pools.list reads the Access
-// Issuer's public /v1/pools registry (the sandbox blocks fetch/XHR, so the host
-// does the read natively). The user picks a pool, or enters one manually. Token
-// symbols + decimals are read on-chain; the per-chain Uniswap router + quoter come
-// from CHAIN_INFRA. Signing/verification happen in native Maknoon sheets; this
-// page only orchestrates and never sees key material.
+// The chain is chosen in the top-right dropdown (all Maknoon EVM chains, in the
+// wallet's order, each showing how many issuer pools it has). Picking a chain
+// switches the wallet, filters the issuer pools to that chain, and lets the user
+// add a pool manually. A pool may be credential-gated (an OnchainIdAccessGate the
+// hook enforces) or a plain v4 pool (no hook) that anyone can swap. Signing and
+// verification happen in native Maknoon sheets; this page never sees key material.
 
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Static config. Pools themselves come from the issuer registry at runtime.
-// ---------------------------------------------------------------------------
 const CONFIG = {
   // The Access Issuer (issuer-backend): serves GET /v1/pools and runs
-  // POST /v1/networks/{caip2}/access-issuer/grant. Verifies the passport +
-  // sanctions-clean presentation, then writes the on-chain ONCHAINID / ERC-3643
-  // claim (ADR-0058). The native handler binds the wallet-control proof to issuerDid.
+  // POST /v1/networks/{caip2}/access-issuer/grant (ADR-0058).
   issuerBaseUrl: "https://musnad-issuer.elabify.com",
   issuerDid: "did:elabify:sepolia:issuer:musnad",
   passportSchema: "elabify://schema/global/passport/v1",
   slippageBps: 50, // 0.50%, applied to the quote for the display-only minimum received
+  defaultChainId: 84532, // Base Sepolia, when the registry is empty
 };
 
-// Per-chain Uniswap v4 infra. A registry row carries the pool identity + gate;
-// the singleton PoolManager, the test router, and the Quoter are fixed per-chain
-// deployments, so they live here keyed by chainId. A chain with no entry can
-// still be gated + read (isAllowed / grant work via the bridge), but swaps + the
-// receive estimate are disabled until its infra is filled in.
-// A pool row (from the issuer registry OR manual entry) MAY carry its own
-// poolSwapTest/quoter/explorer; when it does, those win. This map is only the
-// per-chain default for the chains we operate, used when a row omits them.
-const CHAIN_INFRA = {
-  84532: {
-    label: "Base Sepolia",
-    explorer: "https://sepolia.basescan.org",
-    poolSwapTest: "0x8b5bcc363dde2614281ad875bad385e0a785d3b9", // PoolSwapTest router (verified)
-    quoter: "0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba",       // v4 Quoter (fixed Uniswap deployment)
-  },
-  11155111: {
-    label: "Sepolia",
-    explorer: "https://sepolia.etherscan.io",
-    poolSwapTest: "0x9b6b46e2c869aa39918db7f52f5557fe577b6eee", // PoolSwapTest router (Uniswap Sepolia)
-    quoter: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227",       // V4Quoter (Uniswap Sepolia)
-  },
-};
+// All Maknoon-wallet EVM chains in the wallet's display order (Ethereum first,
+// then mainnets A-Z, then testnets Sepolia-first A-Z). Each carries its canonical
+// Uniswap v4 infra (PoolManager / V4Quoter / PoolSwapTest) when deployed; chains
+// without v4 (poolManager null) can't host a pool. `demoGate` + `demoHook` are the
+// credential-gated demo deployment on our two chains; a manual pool there reuses
+// them (gated), elsewhere a manual pool is a plain no-hook v4 pool (ungated).
+// PoolSwapTest is a testnet-only helper, so mainnet pools quote but cannot swap.
+const CHAINS = [
+  // ---- mainnets ----
+  { id: 1, label: "Ethereum", testnet: false, explorer: "https://etherscan.io",
+    poolManager: "0x000000000004444c5dc75cB358380D2e3dE08A90", quoter: "0x52f0e24d1c21c8a0cb1e5a5dd6198556bd9e1203", poolSwapTest: null,
+    stateView: "0x7ffe42c4a5deea5b0fec41c94c136cf115597227" },
+  { id: 42161, label: "Arbitrum One", testnet: false, explorer: "https://arbiscan.io",
+    poolManager: "0x360e68faccca8ca495c1b759fd9eee466db9fb32", quoter: "0x3972c00f7ed4885e145823eb7c655375d275a1c5", poolSwapTest: null,
+    stateView: "0x76fd297e2d437cd7f76d50f01afe6160f86e9990" },
+  { id: 43114, label: "Avalanche", testnet: false, explorer: "https://snowtrace.io",
+    poolManager: "0x06380c0e0912312b5150364b9dc4542ba0dbbc85", quoter: "0xbe40675bb704506a3c2ccfb762dcfd1e979845c2", poolSwapTest: null,
+    stateView: "0xc3c9e198c735a4b97e3e683f391ccbdd60b69286" },
+  { id: 8453, label: "Base", testnet: false, explorer: "https://basescan.org",
+    poolManager: "0x498581ff718922c3f8e6a244956af099b2652b2b", quoter: "0x0d5e0f971ed27fbff6c2837bf31316121532048d", poolSwapTest: null,
+    stateView: "0xa3c0c9b65bad0b08107aa264b0f3db444b867a71" },
+  { id: 56, label: "BNB Smart Chain", testnet: false, explorer: "https://bscscan.com",
+    poolManager: "0x28e2ea090877bf75740558f6bfb36a5ffee9e9df", quoter: "0x9f75dd27d6664c475b90e105573e550ff69437b0", poolSwapTest: null,
+    stateView: "0xd13dd3d6e93f276fafc9db9e6bb47c1180aee0c4" },
+  { id: 999, label: "Hyperliquid EVM", testnet: false, explorer: null, poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 59144, label: "Linea", testnet: false, explorer: "https://lineascan.build", poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 5000, label: "Mantle", testnet: false, explorer: "https://mantlescan.xyz", poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 10, label: "OP Mainnet", testnet: false, explorer: "https://optimistic.etherscan.io",
+    poolManager: "0x9a13f98cb987694c9f086b1f5eb990eea8264ec3", quoter: "0x1f3131a13296fb91c90870043742c3cdbff1a8d7", poolSwapTest: null,
+    stateView: "0xc18a3169788f4f75a170290584eca6395c75ecdb" },
+  { id: 137, label: "Polygon", testnet: false, explorer: "https://polygonscan.com",
+    poolManager: "0x67366782805870060151383f4bbff9dab53e5cd6", quoter: "0xb3d5c3dfc3a7aebff71895a7191796bffc2c81b9", poolSwapTest: null,
+    stateView: "0x5ea1bd7974c8a611cbab0bdcafcb1d9cc9b3ba5a" },
+  { id: 1101, label: "Polygon zkEVM", testnet: false, explorer: "https://zkevm.polygonscan.com", poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 534352, label: "Scroll", testnet: false, explorer: "https://scrollscan.com", poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 324, label: "zkSync Era", testnet: false, explorer: "https://explorer.zksync.io", poolManager: null, quoter: null, poolSwapTest: null },
+  // ---- testnets ----
+  { id: 11155111, label: "Sepolia", testnet: true, explorer: "https://sepolia.etherscan.io",
+    poolManager: "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543", quoter: "0x61b3f2011a92d183c7dbadbda940a7555ccf9227", poolSwapTest: "0x9b6b46e2c869aa39918db7f52f5557fe577b6eee",
+    demoGate: "0x481b1EaC56190fF8690d64204aF85A100Ae5487f", demoHook: "0xE45807DafdCB2E6F1B95111930D00EC8FFDDc080",
+    stateView: "0xe1dd9c3fa50edb962e442f60dfbc432e24537e4c" },
+  { id: 99999, label: "ADI Testnet", testnet: true, explorer: null, poolManager: null, quoter: null, poolSwapTest: null },
+  { id: 421614, label: "Arbitrum Sepolia", testnet: true, explorer: "https://sepolia.arbiscan.io",
+    poolManager: "0xFB3e0C6F74eB1a21CC1Da29aeC80D2Dfe6C9a317", quoter: "0x7de51022d70a725b508085468052e25e22b5c4c9", poolSwapTest: "0xf3a39c86dbd13c45365e57fb90fe413371f65af8",
+    stateView: "0x9d467fa9062b6e9b1a46e26007ad82db116c67cb" },
+  { id: 84532, label: "Base Sepolia", testnet: true, explorer: "https://sepolia.basescan.org",
+    poolManager: "0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408", quoter: "0x4a6513c898fe1b2d0e78d3b0e0a4a151589b1cba", poolSwapTest: "0x8b5bcc363dde2614281ad875bad385e0a785d3b9",
+    demoGate: "0x5af09be4e3675838Ae1728749424971B094228e8", demoHook: "0xBB75553378783dc1390a078E7C07c81EEF1A0080",
+    stateView: "0x571291b572ed32ce6751a2cb2486ebee8defb9b4" },
+  { id: 11155420, label: "OP Sepolia", testnet: true, explorer: "https://sepolia-optimism.etherscan.io", poolManager: null, quoter: null, poolSwapTest: null },
+];
+const ZERO_HOOK = "0x0000000000000000000000000000000000000000";
+function chainById(id) { return CHAINS.find((c) => c.id === Number(id)) || null; }
 
-// Function selectors (keccak256(signature)[0:4], computed with `cast sig`):
+// Function selectors (keccak256(signature)[0:4], via `cast sig`):
 const SELECTOR = {
   approve:   "095ea7b3", // approve(address,uint256)
   isAllowed: "babcc539", // isAllowed(address)
@@ -60,16 +85,19 @@ const SELECTOR = {
   symbol:    "95d89b41", // symbol()
   swap:      "2229d0b4", // swap((address,address,uint24,int24,address),(bool,int256,uint160),(bool,bool),bytes)
   quote:     "aa9d21cb", // quoteExactInputSingle(((address,address,uint24,int24,address),bool,uint128,bytes))
+  getSlot0:  "c815641c", // StateView.getSlot0(bytes32) -> (uint160 sqrtPriceX96,int24,uint24,uint24)
 };
 
-// Uniswap v4 TickMath sqrt-price bounds (used as swap price limits).
+// Uniswap v4 TickMath sqrt-price bounds (swap price limits).
 const MIN_SQRT_PRICE = 4295128739n;
 const MAX_SQRT_PRICE = 1461446703485210103287273052203988822378723970342n;
 
 const $ = (s) => document.querySelector(s);
 const hasEth = () => !!(window.ethereum && typeof window.ethereum.request === "function");
 
-const state = { address: null, allowed: false, credId: null, pools: [], pool: null };
+// chainId = the selected chain (top-right). pools = every issuer/manual pool;
+// pool = the selected pool on the current chain (null if the chain has none).
+const state = { address: null, allowed: false, credId: null, chainId: CONFIG.defaultChainId, pools: [], pool: null, menuOpen: false };
 
 // --- EIP-1193 ---------------------------------------------------------------
 function eth(method, params) {
@@ -89,24 +117,88 @@ function encInt(v) {
   return pad32(n.toString(16));
 }
 
-// approve(spender, amount) calldata.
 function encodeApprove(spender, amount) {
   return "0x" + SELECTOR.approve + encAddress(spender) + encUint(amount);
 }
 
-// PoolSwapTest.swap(key, params, testSettings, hookData) calldata. key/params/
-// testSettings are static tuples encoded inline; hookData is dynamic (empty here).
+// --- keccak256 (pure JS, BigInt lanes; strict-CSP-safe, no external lib) -----
+// Needed to derive a v4 poolId. A v4 pool has NO contract address: its identity
+// is keccak256(abi.encode(currency0, currency1, fee, tickSpacing, hooks)) inside
+// the single PoolManager. Validated against the standard keccak-256 vectors and
+// a live StateView.getSlot0 read before shipping.
+const KMASK64 = (1n << 64n) - 1n;
+const KECCAK_RC = [
+  0x0000000000000001n, 0x0000000000008082n, 0x800000000000808an, 0x8000000080008000n,
+  0x000000000000808bn, 0x0000000080000001n, 0x8000000080008081n, 0x8000000000008009n,
+  0x000000000000008an, 0x0000000000000088n, 0x0000000080008009n, 0x000000008000000an,
+  0x000000008000808bn, 0x800000000000008bn, 0x8000000000008089n, 0x8000000000008003n,
+  0x8000000000008002n, 0x8000000000000080n, 0x000000000000800an, 0x800000008000000an,
+  0x8000000080008081n, 0x8000000000008080n, 0x0000000080000001n, 0x8000000080008008n,
+];
+const KECCAK_ROT = [
+  0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39,
+  41, 45, 15, 21, 8, 18, 2, 61, 56, 14,
+];
+const kIdx = (x, y) => x + 5 * y;
+function kRotl(v, n) { n %= 64n; if (n === 0n) return v & KMASK64; return ((v << n) | (v >> (64n - n))) & KMASK64; }
+function keccakF(s) {
+  for (let round = 0; round < 24; round++) {
+    const C = new Array(5);
+    for (let x = 0; x < 5; x++) C[x] = s[kIdx(x, 0)] ^ s[kIdx(x, 1)] ^ s[kIdx(x, 2)] ^ s[kIdx(x, 3)] ^ s[kIdx(x, 4)];
+    const D = new Array(5);
+    for (let x = 0; x < 5; x++) D[x] = C[(x + 4) % 5] ^ kRotl(C[(x + 1) % 5], 1n);
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) s[kIdx(x, y)] ^= D[x];
+    const B = new Array(25).fill(0n);
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) B[kIdx(y, (2 * x + 3 * y) % 5)] = kRotl(s[kIdx(x, y)], BigInt(KECCAK_ROT[kIdx(x, y)]));
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) s[kIdx(x, y)] = B[kIdx(x, y)] ^ ((~B[kIdx((x + 1) % 5, y)] & KMASK64) & B[kIdx((x + 2) % 5, y)]);
+    s[0] ^= KECCAK_RC[round];
+  }
+}
+function keccak256Bytes(msg) {
+  const rate = 136;
+  const s = new Array(25).fill(0n);
+  const padLen = rate - (msg.length % rate);
+  const total = msg.length + padLen;
+  const p = new Uint8Array(total);
+  p.set(msg);
+  p[msg.length] |= 0x01;
+  p[total - 1] |= 0x80;
+  for (let b = 0; b < total; b += rate) {
+    for (let i = 0; i < rate; i += 8) {
+      let lane = 0n;
+      for (let j = 7; j >= 0; j--) lane = (lane << 8n) | BigInt(p[b + i + j]);
+      s[i / 8] ^= lane;
+    }
+    keccakF(s);
+  }
+  const out = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) out[i] = Number((s[Math.floor(i / 8)] >> BigInt(8 * (i % 8))) & 0xffn);
+  return out;
+}
+function hexToBytes(h) {
+  const hn = stripHex(h);
+  const out = new Uint8Array(hn.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hn.substr(i * 2, 2), 16);
+  return out;
+}
+function keccak256Hex(hexNoPrefix) {
+  return Array.from(keccak256Bytes(hexToBytes(hexNoPrefix))).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+// v4 PoolId = keccak256(abi.encode(PoolKey{currency0,currency1,fee,tickSpacing,hooks})).
+// currency0 MUST be the numerically-smaller token address.
+function computePoolId(currency0, currency1, fee, tickSpacing, hooks) {
+  const enc = encAddress(currency0) + encAddress(currency1) + encUint(fee) + encInt(tickSpacing) + encAddress(hooks);
+  return "0x" + keccak256Hex(enc);
+}
+
+// PoolSwapTest.swap(key, params, testSettings, hookData) calldata.
 function encodeSwap(key, params, testSettings, hookData) {
   const head =
-    // PoolKey tuple (5 static words)
     encAddress(key.currency0) + encAddress(key.currency1) +
     encUint(key.fee) + encInt(key.tickSpacing) + encAddress(key.hooks) +
-    // SwapParams tuple (3 static words)
     encBool(params.zeroForOne) + encInt(params.amountSpecified) + encUint(params.sqrtPriceLimitX96) +
-    // TestSettings tuple (2 static words)
     encBool(testSettings.takeClaims) + encBool(testSettings.settleUsingBurn);
-  // hookData is the only dynamic arg; its offset = bytes of the head + this
-  // offset word itself. head has 10 tuple words + 1 offset word = 11 * 32 = 352.
   const offset = encUint(11 * 32);
   const hd = stripHex(hookData || "0x");
   const hdLen = encUint(hd.length / 2);
@@ -114,25 +206,18 @@ function encodeSwap(key, params, testSettings, hookData) {
   return "0x" + SELECTOR.swap + head + offset + hdLen + hdBody;
 }
 
-// V4Quoter.quoteExactInputSingle(QuoteExactSingleParams) calldata. The single arg
-// is a dynamic struct (it carries `bytes hookData`), so the calldata opens with a
-// 0x20 offset word. Struct layout: PoolKey (5 static words) + zeroForOne +
-// exactAmount (uint128) + hookData offset (=8*32 within the struct) + the empty
-// hookData length word.
+// V4Quoter.quoteExactInputSingle(QuoteExactSingleParams) calldata.
 function encodeQuote(key, zeroForOne, exactAmount) {
   const struct =
     encAddress(key.currency0) + encAddress(key.currency1) +
     encUint(key.fee) + encInt(key.tickSpacing) + encAddress(key.hooks) +
     encBool(zeroForOne) + encUint(exactAmount) + encUint(8 * 32) +
-    encUint(0); // hookData length = 0 (empty)
+    encUint(0);
   return "0x" + SELECTOR.quote + encUint(32) + struct;
 }
 
-// Real on-chain receive estimate via the Uniswap v4 Quoter (eth_call, which
-// simulates the swap). `from` is the connected wallet so the pool's beforeSwap
-// hook (gate.isAllowed(tx.origin)) passes during the simulation. Returns tokenOut
-// units (BigInt), or null when the quote can't be produced (wallet not verified,
-// no liquidity, missing quoter) so the caller falls back to the placeholder.
+// Real receive estimate via the Uniswap v4 Quoter (eth_call). `from` is the
+// connected wallet so a gated pool's beforeSwap hook passes during simulation.
 async function quoteReceive(exactAmount) {
   const p = state.pool;
   if (!state.address || !p || !p.quoter) return null;
@@ -145,7 +230,7 @@ async function quoteReceive(exactAmount) {
     ]);
     const hex = stripHex(out);
     if (hex.length < 64) return null;
-    return BigInt("0x" + hex.slice(0, 64)); // amountOut is the first return word
+    return BigInt("0x" + hex.slice(0, 64));
   } catch (e) {
     return null;
   }
@@ -157,7 +242,7 @@ async function ethCall(to, dataHex) {
 }
 async function isAllowed(addr) {
   const out = await ethCall(state.pool.accessGate, "0x" + SELECTOR.isAllowed + encAddress(addr));
-  return /[1-9a-f]/.test(stripHex(out).slice(-1)); // last byte nonzero => true
+  return /[1-9a-f]/.test(stripHex(out).slice(-1));
 }
 async function readDecimals(addr) {
   const h = stripHex(await ethCall(addr, "0x" + SELECTOR.decimals));
@@ -165,7 +250,6 @@ async function readDecimals(addr) {
 }
 async function readSymbol(addr) {
   const h = stripHex(await ethCall(addr, "0x" + SELECTOR.symbol));
-  // ABI-encoded string: [offset][length][data...]; decode ASCII (token symbols).
   if (h.length >= 128) {
     const len = Number(BigInt("0x" + h.slice(64, 128)));
     const ascii = hexToAscii(h.slice(128, 128 + len * 2));
@@ -173,7 +257,6 @@ async function readSymbol(addr) {
   }
   return shortAddr(addr);
 }
-// Read symbol + decimals for the active pool's tokens (once, cached on the pool).
 async function hydrateTokens() {
   const p = state.pool;
   if (!p) return;
@@ -181,52 +264,83 @@ async function hydrateTokens() {
     if (tok.decimals == null) { try { tok.decimals = await readDecimals(tok.address); } catch (e) { tok.decimals = 18; } }
     if (tok.symbol == null) { try { tok.symbol = await readSymbol(tok.address); } catch (e) { tok.symbol = shortAddr(tok.address); } }
   }
+  // Auto-name a manual pool from its token symbols once known.
+  if (p.autoName) p.name = `${p.tokenIn.symbol} / ${p.tokenOut.symbol}`;
 }
 
-// currency0 < currency1 (v4 ordering); track which side is the input token.
 function sortedPool() {
   const a = state.pool.tokenIn, b = state.pool.tokenOut;
   const inIsZero = BigInt(a.address) < BigInt(b.address);
-  return {
-    currency0: inIsZero ? a.address : b.address,
-    currency1: inIsZero ? b.address : a.address,
-    zeroForOne: inIsZero, // selling the input token
-  };
+  return { currency0: inIsZero ? a.address : b.address, currency1: inIsZero ? b.address : a.address, zeroForOne: inIsZero };
+}
+
+// StateView.getSlot0(poolId) reads pool state WITHOUT triggering a hook's
+// beforeSwap, so it works even on a credential-gated pool from an unverified
+// caller. Returns the sqrtPriceX96 (0 => the pool is not initialized) or null.
+async function readSlot0(stateView, poolId) {
+  const out = await ethCall(stateView, "0x" + SELECTOR.getSlot0 + stripHex(poolId));
+  const hex = stripHex(out);
+  if (hex.length < 64) return null;
+  return BigInt("0x" + hex.slice(0, 64));
+}
+
+// Discover a v4 pool from just its token pair. A v4 pool has no address, so we
+// probe candidate PoolKeys ({demo gated hook, then no-hook} x common fee tiers)
+// via getSlot0 and return the first initialized one, tagging whether it is the
+// chain's demo credential-gated pool or a plain pool. Arbitrary third-party
+// hooks cannot be guessed, so on a chain with no demo deployment only plain
+// (no-hook) pools are discoverable.
+async function probePool(chainId, tokenA, tokenB) {
+  const c = chainById(chainId);
+  if (!c || !c.poolManager || !c.stateView) return { error: "no_v4" };
+  const [c0, c1] = BigInt(tokenA) < BigInt(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA];
+  const hooks = [];
+  if (c.demoHook) hooks.push({ hook: c.demoHook, gate: c.demoGate || null });
+  hooks.push({ hook: ZERO_HOOK, gate: null });
+  const tiers = [{ fee: 3000, ts: 60 }, { fee: 500, ts: 10 }, { fee: 100, ts: 1 }, { fee: 10000, ts: 200 }];
+  for (const h of hooks) {
+    for (const tr of tiers) {
+      const id = computePoolId(c0, c1, tr.fee, tr.ts, h.hook);
+      let sqrt = null;
+      try { sqrt = await readSlot0(c.stateView, id); } catch (e) { sqrt = null; }
+      if (sqrt != null && sqrt !== 0n) {
+        return { found: true, fee: tr.fee, tickSpacing: tr.ts, hook: h.hook, gate: h.gate };
+      }
+    }
+  }
+  return { found: false };
 }
 
 // --- pool discovery ---------------------------------------------------------
-// Build the internal pool object from a row (issuer registry OR manual entry).
-// Infra (router/quoter/explorer) is taken from the row when present, else the
-// per-chain CHAIN_INFRA default, so pools on any chain work when their addresses
-// are supplied. `source` records provenance for the picker caption. Direction
-// defaults to tokenA (pay) -> tokenB (receive).
+// Build a pool from a row (issuer registry OR manual). Infra falls back to the
+// chain's v4 defaults; `accessGate` may be null (ungated / no-hook pool).
 function makePool(row, source) {
   const chainId = Number(row.chainId);
-  const infra = CHAIN_INFRA[chainId] || {};
+  const c = chainById(chainId) || {};
+  const gate = row.gate || null;
   return {
-    name: row.name || ("Pool " + shortAddr(row.gate)),
+    name: row.name || (gate ? "Gated pool" : "Pool"),
+    autoName: !!row.autoName,
     chainId,
     chainIdHex: "0x" + chainId.toString(16),
     caip2: row.caip2 || ("eip155:" + chainId),
-    chainLabel: infra.label || ("Chain " + chainId),
-    explorer: row.explorer || infra.explorer || null,
-    poolManager: row.poolManager,
-    poolSwapTest: row.poolSwapTest || infra.poolSwapTest || null,
-    quoter: row.quoter || infra.quoter || null,
-    accessGate: row.gate,
-    hook: row.hook,
-    fee: Number(row.fee),
-    tickSpacing: Number(row.tickSpacing),
+    chainLabel: c.label || ("Chain " + chainId),
+    explorer: row.explorer || c.explorer || null,
+    poolManager: row.poolManager || c.poolManager || null,
+    poolSwapTest: row.poolSwapTest || c.poolSwapTest || null,
+    quoter: row.quoter || c.quoter || null,
+    accessGate: gate,
+    hook: row.hook || ZERO_HOOK,
+    fee: Number(row.fee != null ? row.fee : 3000),
+    tickSpacing: Number(row.tickSpacing != null ? row.tickSpacing : 60),
     tokenIn:  { address: row.tokenA, symbol: null, decimals: null },
     tokenOut: { address: row.tokenB, symbol: null, decimals: null },
     source: source || { kind: "manual" },
   };
 }
 
-// Read the issuer's pool registry through the native bridge (the sandbox has no
-// fetch). No built-in fallback: pools come only from the issuer registry or the
-// user's manual entry. An unreachable/empty registry leaves the list empty and
-// the manual-entry form is the way in.
+// Read the issuer registry through the native bridge (the sandbox has no fetch).
+// No built-in fallback: pools come only from the issuer or the user's manual entry.
 async function loadPools() {
   let rows = [];
   try {
@@ -234,26 +348,73 @@ async function loadPools() {
       const res = await window.maknoon.pools.list({ issuerUrl: CONFIG.issuerBaseUrl });
       if (res && Array.isArray(res.pools)) rows = res.pools;
     }
-  } catch (e) { /* registry unreachable: leave empty, user can add manually */ }
+  } catch (e) { /* registry unreachable: user can still add manually */ }
   let host = "";
   try { host = new URL(CONFIG.issuerBaseUrl).host; } catch (e) {}
   state.pools = rows.map((r) => makePool(r, { kind: "issuer", host }));
-  state.pool = state.pools[0] || null;
+  // Default the chain to the first issuer pool's chain, else Base Sepolia.
+  state.chainId = state.pools[0] ? state.pools[0].chainId : CONFIG.defaultChainId;
+}
+
+function poolsOnChain(id) { return state.pools.filter((p) => p.chainId === Number(id)); }
+function countByChain(id) { return poolsOnChain(id).length; }
+
+// --- chain dropdown (top-right) ---------------------------------------------
+function renderChainChip() {
+  const c = chainById(state.chainId);
+  $("#netChip").textContent = (c ? c.label : "Chain " + state.chainId) + " ▾";
+}
+
+function renderChainMenu() {
+  const menu = $("#chainMenu");
+  menu.innerHTML = CHAINS.map((c) => {
+    const n = countByChain(c.id);
+    const noV4 = !c.poolManager;
+    const cls = "chain-row" + (c.id === state.chainId ? " active" : "") + (n === 0 ? " empty" : "") + (noV4 ? " nov4" : "");
+    return `<button type="button" class="${cls}" data-chain="${c.id}">
+        <span class="chain-name">${esc(c.label)}</span>
+        <span class="chain-count">${noV4 ? "—" : "(" + n + ")"}</span>
+      </button>`;
+  }).join("");
+  menu.querySelectorAll(".chain-row").forEach((b) =>
+    b.addEventListener("click", () => selectChain(Number(b.dataset.chain))));
+  menu.classList.toggle("hidden", !state.menuOpen);
+}
+
+function toggleChainMenu(open) {
+  state.menuOpen = open != null ? open : !state.menuOpen;
+  renderChainMenu();
+}
+
+// Switch chains: filter pools, pick the first on that chain, align the wallet
+// (silent switch), re-hydrate + re-gate.
+async function selectChain(id) {
+  state.chainId = Number(id);
+  state.menuOpen = false;
+  state.allowed = false;
+  state.credId = null;
+  const list = poolsOnChain(id);
+  state.pool = list[0] || null;
+  renderChainChip();
+  renderChainMenu();
+  populatePoolSelect();
+  if (state.address) { await connectAndGate(); } else { renderGate(); }
 }
 
 function populatePoolSelect() {
+  const list = poolsOnChain(state.chainId);
   const sel = $("#poolSelect");
-  sel.innerHTML = state.pools
-    .map((p, i) => `<option value="${i}">${esc(p.name)} · ${esc(p.chainLabel)}</option>`)
-    .join("");
-  if (state.pool) sel.value = String(Math.max(0, state.pools.indexOf(state.pool)));
-  // The picker + manual-entry are ALWAYS available (this block also hosts the
-  // "enter a pool manually" form). Show an empty hint + the provenance caption.
-  $("#poolEmpty").classList.toggle("hidden", state.pools.length > 0);
+  sel.innerHTML = list.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join("");
+  if (state.pool) sel.value = String(Math.max(0, list.indexOf(state.pool)));
+  $("#poolEmpty").classList.toggle("hidden", list.length > 0);
   renderPoolSource();
+  // A chain with no v4 infra can't host a manual pool; disable the form.
+  const c = chainById(state.chainId);
+  const noV4 = !c || !c.poolManager;
+  $("#poolManual").classList.toggle("hidden", noV4);
+  $("#poolNoV4").classList.toggle("hidden", !noV4);
 }
 
-// Caption under the picker: where the selected pool came from.
 function renderPoolSource() {
   const cap = $("#poolSource");
   const p = state.pool;
@@ -263,14 +424,12 @@ function renderPoolSource() {
     : t("src_manual");
 }
 
-// Switch to a pool: reset gate state, update the chip, and (if already connected)
-// re-run connect so we switch chain + re-hydrate + re-gate for the new pool.
 async function selectPool(i) {
-  if (!state.pools[i]) return;
-  state.pool = state.pools[i];
+  const list = poolsOnChain(state.chainId);
+  if (!list[i]) return;
+  state.pool = list[i];
   state.allowed = false;
   state.credId = null;
-  $("#netChip").textContent = state.pool.chainLabel;
   renderPoolSource();
   if (state.address) { await connectAndGate(); } else { renderGate(); }
 }
@@ -295,6 +454,8 @@ async function connectAndGate() {
 }
 
 async function refreshGate() {
+  // Ungated pools (no accessGate) are open: connecting is enough.
+  if (!state.pool.accessGate) { state.allowed = true; renderGate(); return; }
   try {
     state.allowed = await isAllowed(state.address);
   } catch (e) {
@@ -303,26 +464,14 @@ async function refreshGate() {
   renderGate();
 }
 
-// Verify to access: prove personhood + sanctions-clean via a passport
-// presentation, prove control of the EVM address, and let the verifier write
-// the on-chain grant / ONCHAINID claim.
+// Verify to access (gated pools only): prove personhood + sanctions-clean via a
+// passport, prove control of the EVM address, let the issuer write the on-chain grant.
 async function verifyToAccess() {
   clearErr();
-  // Show a processing overlay: the native grant does several sequential on-chain
-  // writes (create identity -> register -> add claim) and can take up to a minute
-  // on slow chains, with no visible activity otherwise. The native disclosure +
-  // Face ID sheets appear on top; this overlay is what the user sees during the
-  // on-chain write while the app awaits poolAccess.grant.
   overlay(true);
   renderSteps([{ key: "grant", label: t("step_granting") }]);
   setStep("grant", "active");
   try {
-    // The host performs the whole grant natively (mirrors commerce): it discloses
-    // a passport, sanctions-clean presentation, proves control of this EVM address
-    // with an EIP-712 WalletControl signature (bound to the issuer DID), and POSTs
-    // both to the Access Issuer's /v1/networks/{caip2}/access-issuer/grant. The
-    // presentation and key material never enter this app; we only receive
-    // { granted, walletAddress, txHash, expiry }.
     const res = await window.maknoon.poolAccess.grant({
       issuerUrl: CONFIG.issuerBaseUrl,
       issuerDid: CONFIG.issuerDid,
@@ -332,9 +481,6 @@ async function verifyToAccess() {
     if (!res || !res.granted) {
       throw new Error((res && (res.reason || res.message)) || t("err_verify_denied"));
     }
-
-    // The verifier awaits the on-chain grant tx before returning, so isAllowed
-    // should already be true; confirm with a short poll.
     state.allowed = await isAllowed(state.address).catch(() => true);
     for (let i = 0; i < 8 && !state.allowed; i++) {
       await sleep(1500);
@@ -348,10 +494,9 @@ async function verifyToAccess() {
     renderGate();
   } catch (e) {
     const msg = (e && (e.message || String(e))) || t("err_generic");
-    if (/reject|denied|cancel/i.test(msg)) { overlay(false); return; } // user backed out
+    if (/reject|denied|cancel/i.test(msg)) { overlay(false); return; }
     setStep("grant", "bad");
     result("bad", `<h3>${esc(t("verify_failed"))}</h3><p>${esc(msg)}</p>`);
-    // Leave the overlay open with its Close button so the error + a retry path stay visible.
   }
 }
 
@@ -362,22 +507,17 @@ async function doSwap() {
   if (!(raw > 0)) return;
   const p = state.pool;
   if (!p.poolSwapTest) { showErr(new Error(t("err_no_router"))); return; }
-  const amountUnits = toUnits(raw, p.tokenIn.decimals); // BigInt token units
+  const amountUnits = toUnits(raw, p.tokenIn.decimals);
   const sp = sortedPool();
 
   overlay(true);
-  renderSteps([
-    { key: "approve", label: t("step_approve") },
-    { key: "swap", label: t("step_swap") },
-  ]);
+  renderSteps([{ key: "approve", label: t("step_approve") }, { key: "swap", label: t("step_swap") }]);
   try {
-    // 1. approve(poolSwapTest, amount) on the input token.
     setStep("approve", "active");
     const approveTx = { from: state.address, to: p.tokenIn.address, data: encodeApprove(p.poolSwapTest, amountUnits) };
     await eth("eth_sendTransaction", [approveTx]);
     setStep("approve", "ok");
 
-    // 2. poolSwapTest.swap(...). Exact-in => negative amountSpecified.
     setStep("swap", "active");
     const key = { currency0: sp.currency0, currency1: sp.currency1, fee: p.fee, tickSpacing: p.tickSpacing, hooks: p.hook };
     const params = {
@@ -399,13 +539,14 @@ async function doSwap() {
 function renderGate() {
   const connected = !!state.address;
   const p = state.pool;
-  $("#credCard").classList.toggle("hidden", !state.allowed);
+  const gated = !!(p && p.accessGate);
+  // The credential card only makes sense for a gated pool.
+  $("#credCard").classList.toggle("hidden", !state.allowed || !gated);
   $("#swapCard").classList.toggle("hidden", !state.allowed);
   if (state.credId) $("#credId").textContent = state.credId;
   $("#paySym").textContent = (p && p.tokenIn.symbol) || "";
   $("#getSym").textContent = (p && p.tokenOut.symbol) || "";
   if (state.allowed && p) {
-    // Static pool detail: fee tier (rate + min received fill in on a quote).
     $("#feeVal").textContent = (p.fee / 10000).toFixed(2) + "%";
     $("#swapDetail").classList.remove("hidden");
     if (!p.poolSwapTest) { $("#swapBtn").disabled = true; $("#swapBtn").textContent = t("err_no_router"); }
@@ -416,23 +557,21 @@ function renderGate() {
   card.classList.remove("hidden");
   if (!connected) {
     $("#gateIcon").textContent = "🔒";
-    $("#gateTitle").textContent = t("gate_connect_title");
-    $("#gateBody").textContent = state.pool ? t("gate_connect_body") : t("gate_no_pool_body");
+    $("#gateTitle").textContent = gated ? t("gate_connect_title") : t("gate_connect_open_title");
+    $("#gateBody").textContent = !p ? t("gate_no_pool_body") : (gated ? t("gate_connect_body") : t("gate_connect_open_body"));
     $("#gateBtn").textContent = t("btn_connect");
-    $("#gateBtn").disabled = !state.pool;
+    $("#gateBtn").disabled = !p;
     $("#gateBtn").onclick = connectAndGate;
   } else {
     $("#gateIcon").textContent = "🪪";
     $("#gateTitle").textContent = t("gate_verify_title");
     $("#gateBody").textContent = t("gate_verify_body");
     $("#gateBtn").textContent = t("btn_verify");
+    $("#gateBtn").disabled = false;
     $("#gateBtn").onclick = verifyToAccess;
   }
 }
 
-// Rate / minimum-received detail for the entered amount. `out` is the Quoter
-// estimate (BigInt tokenOut units) or null. Minimum received applies the
-// display-only slippage tolerance; on-chain min-out is not enforced here.
 function renderSwapDetail(rawIn, out) {
   const p = state.pool;
   if (!p) return;
@@ -472,63 +611,80 @@ function txLink(hash) {
   return `<p class="mono"><a href="${esc(url)}">${esc(short)} ↗</a></p>`;
 }
 
-// --- manual pool entry ------------------------------------------------------
+// --- manual pool entry (scoped to the selected chain) -----------------------
 function mfVal(id) { return ($("#" + id).value || "").trim(); }
 function mfAddr(id) {
   const v = mfVal(id);
   if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t("mf_bad_addr"));
   return v;
 }
-// Optional address field: blank -> undefined (falls back to CHAIN_INFRA), else validated.
-function mfAddrOpt(id) {
-  const v = mfVal(id);
-  if (!v) return undefined;
-  if (!/^0x[0-9a-fA-F]{40}$/.test(v)) throw new Error(t("mf_bad_addr"));
-  return v;
-}
-function addManualPool() {
+// Add a pool from just a token pair (+ optional name). Infra (PoolManager /
+// Quoter / router / explorer) comes from the chain's v4 deployment; the fee
+// tier and whether the pool is credential-gated are DISCOVERED on-chain by
+// probing candidate PoolKeys with getSlot0 (a v4 pool has no address to paste).
+async function addManualPool() {
   const err = $("#mf_err");
+  const btn = $("#mf_add");
   err.classList.add("hidden");
+  const c = chainById(state.chainId);
+  let tokenA, tokenB;
   try {
-    const chainId = parseInt(mfVal("mf_chainId"), 10);
-    if (!(chainId > 0)) throw new Error(t("mf_bad_chain"));
-    const fee = parseInt(mfVal("mf_fee"), 10);
-    const tickSpacing = parseInt(mfVal("mf_tickSpacing"), 10);
-    if (!(fee >= 0) || !(tickSpacing > 0)) throw new Error(t("mf_bad_fee"));
-    const row = {
-      name: mfVal("mf_name") || "Custom pool",
-      chainId,
-      caip2: "eip155:" + chainId,
-      poolManager: mfAddr("mf_poolManager"),
-      gate: mfAddr("mf_gate"),
-      hook: mfAddr("mf_hook"),
-      fee,
-      tickSpacing,
-      tokenA: mfAddr("mf_tokenA"),
-      tokenB: mfAddr("mf_tokenB"),
-      // Optional per-pool infra; blank falls back to the chain default (CHAIN_INFRA).
-      poolSwapTest: mfAddrOpt("mf_poolSwapTest"),
-      quoter: mfAddrOpt("mf_quoter"),
-      explorer: mfVal("mf_explorer") || undefined,
-    };
-    state.pools.push(makePool(row, { kind: "manual" }));
-    populatePoolSelect();
-    selectPool(state.pools.length - 1);
+    if (!c || !c.poolManager || !c.stateView) throw new Error(t("mf_no_v4"));
+    if (!hasEth()) throw new Error(t("open_inside"));
+    tokenA = mfAddr("mf_tokenA");
+    tokenB = mfAddr("mf_tokenB");
+    if (tokenA.toLowerCase() === tokenB.toLowerCase()) throw new Error(t("mf_same_token"));
   } catch (e) {
     err.textContent = (e && e.message) || String(e);
     err.classList.remove("hidden");
+    return;
+  }
+
+  const prevLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t("mf_probing");
+  try {
+    const res = await probePool(state.chainId, tokenA, tokenB);
+    if (res.error === "no_v4") throw new Error(t("mf_no_v4"));
+    if (!res.found) throw new Error(t("mf_not_found"));
+    const row = {
+      name: mfVal("mf_name") || undefined,
+      autoName: !mfVal("mf_name"),
+      chainId: c.id,
+      caip2: "eip155:" + c.id,
+      poolManager: c.poolManager,
+      quoter: c.quoter,
+      poolSwapTest: c.poolSwapTest,
+      explorer: c.explorer,
+      gate: res.gate,          // discovered: the demo gate if gated, else null
+      hook: res.hook,          // discovered: demo hook, else no hook
+      fee: res.fee,            // discovered fee tier
+      tickSpacing: res.tickSpacing,
+      tokenA,
+      tokenB,
+    };
+    const pool = makePool(row, { kind: "manual" });
+    state.pools.push(pool);
+    populatePoolSelect();
+    const list = poolsOnChain(state.chainId);
+    $("#mf_name").value = ""; $("#mf_tokenA").value = ""; $("#mf_tokenB").value = "";
+    selectPool(list.length - 1);
+  } catch (e) {
+    err.textContent = (e && e.message) || String(e);
+    err.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prevLabel;
   }
 }
 
 // --- helpers ----------------------------------------------------------------
 function toUnits(amount, decimals) {
-  // decimal string -> integer token units, without float drift.
   const [whole, frac = ""] = String(amount).split(".");
   const fracPadded = (frac + "0".repeat(decimals)).slice(0, decimals);
   return BigInt((whole || "0") + fracPadded);
 }
 function fromUnits(units, decimals) {
-  // integer token units -> trimmed decimal string (inverse of toUnits).
   const s = BigInt(units).toString().padStart(decimals + 1, "0");
   const whole = s.slice(0, s.length - decimals);
   const frac = s.slice(s.length - decimals).replace(/0+$/, "");
@@ -548,7 +704,7 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function clearErr() { const e = $("#gateError"); e.classList.add("hidden"); e.textContent = ""; }
 function showErr(e) {
   const msg = (e && (e.message || String(e))) || t("err_generic");
-  if (/reject|denied|cancel/i.test(msg)) return; // user backed out; not an error banner
+  if (/reject|denied|cancel/i.test(msg)) return;
   const el = $("#gateError"); el.textContent = msg; el.classList.remove("hidden");
 }
 function esc(s) {
@@ -565,12 +721,10 @@ $("#payAmount").addEventListener("input", async () => {
   btn.disabled = !(v > 0) || noRouter;
   btn.textContent = noRouter ? t("err_no_router") : (v > 0 ? t("btn_swap") : t("btn_enter_amount"));
   if (!(v > 0)) { $("#getAmount").textContent = "0.0"; renderSwapDetail(raw, null); return; }
-  // Show the placeholder immediately, then replace it with the real Quoter
-  // estimate. If the quote can't be produced, the placeholder stands.
   $("#getAmount").textContent = t("quoted_onchain");
   const seq = ++quoteSeq;
   const out = await quoteReceive(toUnits(raw, state.pool.tokenIn.decimals));
-  if (seq !== quoteSeq) return; // a newer keystroke superseded this quote
+  if (seq !== quoteSeq) return;
   if (out != null) $("#getAmount").textContent = fromUnits(out, state.pool.tokenOut.decimals);
   renderSwapDetail(raw, out);
 });
@@ -578,6 +732,8 @@ $("#swapBtn").addEventListener("click", doSwap);
 $("#closeOverlay").addEventListener("click", () => overlay(false));
 $("#poolSelect").addEventListener("change", (e) => selectPool(Number(e.target.value)));
 $("#mf_add").addEventListener("click", addManualPool);
+$("#netChip").addEventListener("click", (e) => { e.stopPropagation(); toggleChainMenu(); });
+document.addEventListener("click", () => { if (state.menuOpen) toggleChainMenu(false); });
 
 // --- boot -------------------------------------------------------------------
 (async function boot() {
@@ -591,7 +747,10 @@ $("#mf_add").addEventListener("click", addManualPool);
   if (!hasEth()) { $("#gateBody").textContent = t("open_inside"); $("#gateBtn").disabled = true; return; }
 
   await loadPools();
+  const list = poolsOnChain(state.chainId);
+  state.pool = list[0] || null;
+  renderChainChip();
+  renderChainMenu();
   populatePoolSelect();
-  $("#netChip").textContent = state.pool ? state.pool.chainLabel : t("chip_no_pool");
   renderGate();
 })();

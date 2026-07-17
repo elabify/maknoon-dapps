@@ -20,8 +20,22 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
 .brand-name { font-weight: 700; font-size: 18px; }
 .badge-beta { font-size: 10px; background: var(--panel-2); color: var(--muted);
   padding: 2px 6px; border-radius: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.chain-picker { position: relative; }
 .net-chip { background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
-  border-radius: 999px; padding: 6px 12px; font-size: 12px; }
+  border-radius: 999px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+.chain-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 6px; width: 220px; max-height: 320px; overflow-y: auto;
+  box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+.chain-row { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  width: 100%; background: transparent; color: var(--text); border: none; border-radius: 8px;
+  padding: 9px 10px; font-size: 13px; text-align: left; cursor: pointer; }
+.chain-row:hover { background: var(--panel-2); }
+.chain-row.active { background: var(--panel-2); }
+.chain-row.active .chain-name::before { content: "✓ "; color: var(--accent); }
+.chain-row .chain-count { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chain-row.empty .chain-name, .chain-row.empty .chain-count { opacity: 0.5; }
+.chain-row.nov4 { opacity: 0.4; }
 
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
   padding: 18px; margin-bottom: 14px; }
@@ -38,6 +52,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
 .pool-manual > summary::-webkit-details-marker { display: none; }
 .pool-manual > summary::before { content: "＋ "; }
 .pool-manual[open] > summary::before { content: "－ "; }
+.pool-manual-hint { color: var(--muted); font-size: 11px; margin: 0 0 4px; line-height: 1.4; }
 .pool-manual-body { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
 .pool-manual-body label { color: var(--muted); font-size: 11px; margin-top: 6px; }
 .pool-manual-body input { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
