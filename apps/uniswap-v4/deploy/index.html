@@ -127,6 +127,19 @@
       </p>
       <label>Pool name (for the registry row)</label>
       <input id="poolName" value="AUDD / MMF (Base Sepolia)" />
+      <details style="margin-top: 10px">
+        <summary style="cursor: pointer; font-size: 13px; opacity: 0.85">Advanced</summary>
+        <label style="margin-top: 8px">Fee tier</label>
+        <select id="feeTier">
+          <option value="100">0.01% (100)</option>
+          <option value="500">0.05% (500)</option>
+          <option value="3000" selected>0.30% (3000)</option>
+          <option value="10000">1.00% (10000)</option>
+        </select>
+        <p style="font-size: 12px; opacity: 0.7; margin: 6px 0 0">
+          tickSpacing follows the tier automatically (1 / 10 / 60 / 200). Most demos use 0.30%.
+        </p>
+      </details>
       <div style="margin-top: 10px"><button id="btn-deploy" disabled>Deploy pool</button></div>
     </div>
 

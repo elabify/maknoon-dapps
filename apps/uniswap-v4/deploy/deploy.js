@@ -16,12 +16,19 @@ const CREATE2_DEPLOYER = '0x4e59b44847b379578588920cA78FbF26c0B4956C'; // canoni
 const BEFORE_SWAP_FLAG = 1n << 7n; // Uniswap v4 Hooks.BEFORE_SWAP_FLAG
 const FLAG_MASK = (1n << 14n) - 1n;
 const Q96 = 1n << 96n;
-// Full-range position: min/max usable tick aligned to tickSpacing. Full range always brackets the
-// current tick, so seeded liquidity stays active at any starting price.
-const TICK_LOWER = -887220;
-const TICK_UPPER = 887220;
-const TICK_SPACING = 60;
-const FEE = 3000;
+// Fee tier -> tickSpacing (standard Uniswap v4 map). Chosen in the "Advanced"
+// control; default 0.30% (3000 / 60). Full-range position: min/max usable tick
+// is MAX_TICK (887272) aligned DOWN to the tickSpacing, so it always brackets
+// the current tick and initialize/modifyLiquidity never revert on a non-60
+// spacing (887220 == floor(887272/60)*60, the prior hardcoded value).
+const FEE_TIERS = { 100: 1, 500: 10, 3000: 60, 10000: 200 };
+function feeConfig() {
+  const el = document.getElementById('feeTier');
+  const fee = el ? Number(el.value) : 3000;
+  const tickSpacing = FEE_TIERS[fee] || 60;
+  const maxUsable = Math.floor(887272 / tickSpacing) * tickSpacing;
+  return { fee, tickSpacing, tickLower: -maxUsable, tickUpper: maxUsable };
+}
 // Target ~1,000,000 units of value on each side of the pool (deep, low-slippage for a demo).
 const TARGET_UNITS = 1_000_000n;
 
@@ -361,7 +368,8 @@ async function runDeploy() {
     // currency1-per-currency0 value fraction: if currency0 is tokenA it's `rate`; else it's 1/rate.
     const { num, den } = aIs0 ? rate : { num: rate.den, den: rate.num };
     const sqrtPriceX96 = sqrtPriceX96For(c0.decimals, c1.decimals, num, den);
-    const key = { currency0: c0.address, currency1: c1.address, fee: FEE, tickSpacing: TICK_SPACING, hooks: hook };
+    const { fee, tickSpacing, tickLower, tickUpper } = feeConfig();
+    const key = { currency0: c0.address, currency1: c1.address, fee, tickSpacing, hooks: hook };
     log(`price: 1 ${tokenA.symbol} = ${$('rate').value || '1'} ${tokenB.symbol} (sqrtPriceX96 ${sqrtPriceX96})`);
 
     const pmI = new ethers.Interface(POOL_MANAGER_ABI);
@@ -388,12 +396,12 @@ async function runDeploy() {
       await sendTx({ to: cur.address, data: erc20I.encodeFunctionData('approve', [lpRouter, ethers.MaxUint256]) }, `approve ${cur.symbol}`);
     }
     await sendTx(
-      { to: lpRouter, data: lpI.encodeFunctionData('modifyLiquidity', [key, { tickLower: TICK_LOWER, tickUpper: TICK_UPPER, liquidityDelta: liquidity, salt: ethers.ZeroHash }, '0x']) },
+      { to: lpRouter, data: lpI.encodeFunctionData('modifyLiquidity', [key, { tickLower, tickUpper, liquidityDelta: liquidity, salt: ethers.ZeroHash }, '0x']) },
       'seed liquidity',
     );
     log('liquidity seeded');
 
-    state.deployed = { tokenA, tokenB, hook, lpRouter, poolManager, gate, poolSwapTest, quoter, poolName, fee: FEE, tickSpacing: TICK_SPACING };
+    state.deployed = { tokenA, tokenB, hook, lpRouter, poolManager, gate, poolSwapTest, quoter, poolName, fee, tickSpacing };
     renderResults();
     log('DONE. Copy the registry row into the issuer pool registry / dapp.');
   } catch (e) {
