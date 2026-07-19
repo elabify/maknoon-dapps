@@ -123,6 +123,8 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
 .result-box h3 { margin: 0 0 6px; }
 .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; word-break: break-all; }
 .mono a { color: var(--accent); }
-.sheet-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.sheet-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 8px; }
+/* Auto-width primary button for the action row (the base .primary-btn is full width). */
+.primary-btn.compact { width: auto; padding: 11px 18px; font-size: 15px; }
 
 [dir="rtl"] .leg-head, [dir="rtl"] .topbar { direction: rtl; }

@@ -511,6 +511,7 @@ async function doSwap() {
   const sp = sortedPool();
 
   overlay(true);
+  $("#openWalletBtn").classList.add("hidden"); // shown only after a successful swap
   renderSteps([{ key: "approve", label: t("step_approve") }, { key: "swap", label: t("step_swap") }]);
   try {
     setStep("approve", "active");
@@ -530,6 +531,8 @@ async function doSwap() {
     const hash = await eth("eth_sendTransaction", [swapTx]);
     setStep("swap", "ok");
     result("ok", `<h3>${esc(t("swap_done"))}</h3>${txLink(hash)}`);
+    // Offer "Open wallet" only if the host supports it (older builds won't).
+    if (window.maknoon && window.maknoon.walletView) $("#openWalletBtn").classList.remove("hidden");
   } catch (e) {
     result("bad", `<h3>${esc(t("swap_failed"))}</h3><p>${esc(e && (e.message || String(e)))}</p>`);
   }
@@ -750,6 +753,16 @@ $("#payAmount").addEventListener("input", async () => {
 $("#swapBtn").addEventListener("click", doSwap);
 $("#reverseBtn").addEventListener("click", reverseDirection);
 $("#closeOverlay").addEventListener("click", () => overlay(false));
+// Leave the mini app and open the exact wallet + chain the swap used (the host
+// resyncs it and shows the pending tx). The bridge dismisses the mini app.
+$("#openWalletBtn").addEventListener("click", () => {
+  try {
+    if (window.maknoon && window.maknoon.walletView) {
+      window.maknoon.walletView.open({ chainId: state.chainId, address: state.address });
+    }
+  } catch (e) { /* navigation is best-effort */ }
+  overlay(false);
+});
 $("#poolSelect").addEventListener("change", (e) => selectPool(Number(e.target.value)));
 $("#mf_add").addEventListener("click", addManualPool);
 $("#netChip").addEventListener("click", (e) => { e.stopPropagation(); toggleChainMenu(); });
