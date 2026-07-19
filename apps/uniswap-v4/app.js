@@ -582,7 +582,7 @@ function renderSwapDetail(rawIn, out) {
   const rate = inHuman > 0 ? outHuman / inHuman : 0;
   $("#rateVal").textContent = `1 ${p.tokenIn.symbol} ≈ ${trimNum(rate)} ${p.tokenOut.symbol}`;
   const min = (out * BigInt(10000 - CONFIG.slippageBps)) / 10000n;
-  $("#minVal").textContent = `${fromUnits(min, p.tokenOut.decimals)} ${p.tokenOut.symbol}`;
+  $("#minVal").textContent = `${fmtAmt(min, p.tokenOut.decimals)} ${p.tokenOut.symbol}`;
 }
 
 function renderSteps(steps) {
@@ -700,6 +700,10 @@ function hexToAscii(h) {
 }
 function shortAddr(a) { return a ? a.slice(0, 6) + "…" + a.slice(-4) : ""; }
 function trimNum(n) { return (Math.round(n * 1e6) / 1e6).toString(); }
+// Display amount: full-precision fromUnits (up to `decimals` places) overflows
+// the swap box for 18-decimal tokens, so trim to a readable 6 places for the UI.
+// The actual swap always uses the full-precision BigInt, not this string.
+function fmtAmt(units, decimals) { return trimNum(parseFloat(fromUnits(units, decimals))); }
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 function clearErr() { const e = $("#gateError"); e.classList.add("hidden"); e.textContent = ""; }
 function showErr(e) {
@@ -710,6 +714,21 @@ function showErr(e) {
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Flip the swap direction (tap the arrow between the tokens). Swaps tokenIn <->
+// tokenOut on the pool, updates the symbols, and re-quotes the current amount in
+// the new direction. sortedPool() re-derives zeroForOne from the addresses, so
+// the quote + swap + approve all follow the flipped direction automatically.
+function reverseDirection() {
+  const p = state.pool;
+  if (!p) return;
+  const tmp = p.tokenIn;
+  p.tokenIn = p.tokenOut;
+  p.tokenOut = tmp;
+  $("#paySym").textContent = p.tokenIn.symbol || "";
+  $("#getSym").textContent = p.tokenOut.symbol || "";
+  $("#payAmount").dispatchEvent(new Event("input"));
 }
 
 let quoteSeq = 0;
@@ -725,10 +744,11 @@ $("#payAmount").addEventListener("input", async () => {
   const seq = ++quoteSeq;
   const out = await quoteReceive(toUnits(raw, state.pool.tokenIn.decimals));
   if (seq !== quoteSeq) return;
-  if (out != null) $("#getAmount").textContent = fromUnits(out, state.pool.tokenOut.decimals);
+  if (out != null) $("#getAmount").textContent = fmtAmt(out, state.pool.tokenOut.decimals);
   renderSwapDetail(raw, out);
 });
 $("#swapBtn").addEventListener("click", doSwap);
+$("#reverseBtn").addEventListener("click", reverseDirection);
 $("#closeOverlay").addEventListener("click", () => overlay(false));
 $("#poolSelect").addEventListener("change", (e) => selectPool(Number(e.target.value)));
 $("#mf_add").addEventListener("click", addManualPool);

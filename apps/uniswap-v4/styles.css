@@ -91,9 +91,16 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
 .leg-label { color: var(--muted); font-size: 12px; }
 .leg-sym { font-weight: 600; font-size: 13px; }
 .leg-input { width: 100%; background: transparent; border: none; color: var(--text);
-  font-size: 26px; font-weight: 600; outline: none; padding: 0; }
+  font-size: 26px; font-weight: 600; outline: none; padding: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leg-input.readonly { color: var(--muted); }
-.arrow { text-align: center; color: var(--muted); margin: 2px 0; }
+/* Tappable direction toggle sitting between the two legs. */
+.arrow { display: block; margin: -2px auto; width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--line); border-radius: 50%; background: var(--panel);
+  color: var(--text); font-size: 16px; line-height: 1; cursor: pointer;
+  transition: background .12s ease, border-color .12s ease; }
+.arrow:hover { background: var(--panel-2); }
+.arrow:active { border-color: var(--accent); }
 .swap .primary-btn { margin-top: 12px; }
 
 .footnote { text-align: center; color: var(--muted); font-size: 11px; margin-top: 18px; }
