@@ -339,21 +339,70 @@ function makePool(row, source) {
   };
 }
 
+// Reject a pending promise after `ms` so a native bridge call that never settles
+// (e.g. a mini-app host that cancelled the call mid-flight) degrades to a visible
+// error + Retry instead of an infinite silent spinner.
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("pools.list timed out")), ms)),
+  ]);
+}
+
 // Read the issuer registry through the native bridge (the sandbox has no fetch).
 // No built-in fallback: pools come only from the issuer or the user's manual entry.
+// Returns "ok" | "empty" | "error": "error" means we could not reach the registry
+// (bridge threw / timed out); "empty" means the issuer returned no pools (manual
+// add still works). The caller surfaces each state so the user always knows whether
+// it is still trying, gave up, or the issuer simply has none.
 async function loadPools() {
-  let rows = [];
+  if (!(window.maknoon && window.maknoon.pools && window.maknoon.pools.list)) {
+    state.pools = [];
+    state.chainId = state.chainId || CONFIG.defaultChainId;
+    return "empty";
+  }
+  let res;
   try {
-    if (window.maknoon && window.maknoon.pools && window.maknoon.pools.list) {
-      const res = await window.maknoon.pools.list({ issuerUrl: CONFIG.issuerBaseUrl });
-      if (res && Array.isArray(res.pools)) rows = res.pools;
-    }
-  } catch (e) { /* registry unreachable: user can still add manually */ }
+    res = await withTimeout(window.maknoon.pools.list({ issuerUrl: CONFIG.issuerBaseUrl }), 12000);
+  } catch (e) {
+    return "error";
+  }
+  const rows = (res && Array.isArray(res.pools)) ? res.pools : [];
   let host = "";
   try { host = new URL(CONFIG.issuerBaseUrl).host; } catch (e) {}
   state.pools = rows.map((r) => makePool(r, { kind: "issuer", host }));
   // Default the chain to the first issuer pool's chain, else Base Sepolia.
   state.chainId = state.pools[0] ? state.pools[0].chainId : CONFIG.defaultChainId;
+  return rows.length > 0 ? "ok" : "empty";
+}
+
+// Load (or reload) pools with visible loading / error states, without blocking the
+// initial render. On error, shows a message + Retry; "empty" falls through to the
+// existing per-chain "no pools yet" hint.
+async function hydratePools() {
+  setPoolStatus("loading");
+  const status = await loadPools();
+  const list = poolsOnChain(state.chainId);
+  state.pool = list[0] || null;
+  renderChainChip();
+  renderChainMenu();
+  populatePoolSelect();
+  renderGate();
+  setPoolStatus(status);
+}
+
+function setPoolStatus(status) {
+  const loading = $("#poolLoading");
+  const error = $("#poolError");
+  const retry = $("#poolRetry");
+  if (loading) loading.classList.toggle("hidden", status !== "loading");
+  const failed = status === "error";
+  if (error) { error.classList.toggle("hidden", !failed); if (failed) error.textContent = t("pool_error"); }
+  if (retry) retry.classList.toggle("hidden", !failed);
+  if (status === "loading") {
+    $("#poolEmpty").classList.add("hidden");
+    $("#poolNoV4").classList.add("hidden");
+  }
 }
 
 function poolsOnChain(id) { return state.pools.filter((p) => p.chainId === Number(id)); }
@@ -767,6 +816,7 @@ $("#poolSelect").addEventListener("change", (e) => selectPool(Number(e.target.va
 $("#mf_add").addEventListener("click", addManualPool);
 $("#netChip").addEventListener("click", (e) => { e.stopPropagation(); toggleChainMenu(); });
 document.addEventListener("click", () => { if (state.menuOpen) toggleChainMenu(false); });
+$("#poolRetry").addEventListener("click", () => { hydratePools(); });
 
 // --- boot -------------------------------------------------------------------
 (async function boot() {
@@ -779,11 +829,12 @@ document.addEventListener("click", () => { if (state.menuOpen) toggleChainMenu(f
 
   if (!hasEth()) { $("#gateBody").textContent = t("open_inside"); $("#gateBtn").disabled = true; return; }
 
-  await loadPools();
-  const list = poolsOnChain(state.chainId);
-  state.pool = list[0] || null;
+  // Render the shell immediately so the UI is never a blank/hung skeleton, then
+  // hydrate pools asynchronously with a visible loading state. Not awaited: a slow
+  // or stuck pools.list must not block the whole app from rendering.
+  state.chainId = state.chainId || CONFIG.defaultChainId;
   renderChainChip();
   renderChainMenu();
-  populatePoolSelect();
   renderGate();
+  hydratePools();
 })();
