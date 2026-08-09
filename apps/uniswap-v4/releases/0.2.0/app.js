@@ -824,9 +824,8 @@ $("#poolRetry").addEventListener("click", () => { hydratePools(); });
   try { const info = await window.maknoon.device.info(); locale = (info && info.locale) || "en"; } catch (e) {}
   window.__uniLang = normLocale(locale);
   document.documentElement.lang = window.__uniLang;
-  document.documentElement.dir = isRtl(window.__uniLang) ? "rtl" : "ltr";
+  document.documentElement.dir = (window.__uniLang === "ar") ? "rtl" : "ltr";
   applyStaticI18n();
-  applyChannelBadge();
 
   if (!hasEth()) { $("#gateBody").textContent = t("open_inside"); $("#gateBtn").disabled = true; return; }
 
@@ -839,19 +838,3 @@ $("#poolRetry").addEventListener("click", () => { hydratePools(); });
   renderGate();
   hydratePools();
 })();
-
-// One bundle serves BOTH release channels, so the markup cannot know which one
-// it is: a hardcoded "Beta" was wrong on stable and would be wrong on beta the
-// moment the channels diverged. Ask the host (appInfo.channel, bridgeVersion 2)
-// and reveal the badge only when this install really is a beta. The markup
-// ships it hidden so a stable install never flashes "Beta" before this runs;
-// an older host that sends no channel simply leaves it hidden.
-async function applyChannelBadge() {
-  const badge = document.querySelector(".badge-beta");
-  if (!badge) return;
-  try {
-    const info = await window.maknoon.host.appInfo();
-    const channel = info && info.channel;
-    badge.hidden = String(channel || "").toLowerCase() !== "beta";
-  } catch (e) { /* no host / older host -> leave the markup as authored */ }
-}

@@ -9,14 +9,14 @@
       "id": "pos",
       "title": "Point of Sale",
       "summary": "Verify a customer and accept payments.",
-      "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers make payments on the network you choose to your wallet along with sending the required credentials to verify.",
+      "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers pay to your wallet on the network you choose, and send the required credentials for verification at the same time.",
       "iconName": "creditcard.fill",
       "statusLabel": "Stable",
       "curatedBy": "Elabify",
       "version": "0.1.6",
       "channel": "stable",
       "requiresMaknoonVersion": "0.6.3",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/manifest.json",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/releases/0.1.6/manifest.json",
       "manifestSha256": "fd612d461626298d62d506a9ff8d95f44059cb6d984ddbe5b1edea0936c13af0",
       "permissions": [
         "identity",
@@ -25,27 +25,175 @@
       "capabilities": [
         {
           "name": "identity",
-          "reason": "Verify each customer holds a sanctions-clean credential"
+          "reason": "Verify each customer has a sanctions screening with no match"
         },
         {
           "name": "wallet",
           "reason": "Read your receiving addresses across all networks, including assets and transaction history"
         }
-      ]
+      ],
+      "i18n": {
+        "ar": {
+          "summary": "التحقق من العميل وقبول المدفوعات.",
+          "details": "طرفية نقاط بيع للتاجر. أدخل مبلغاً بالعملة المشفّرة أو ما يعادله بالعملة الورقية، وحدد بيانات اعتماد العميل المطلوبة. يدفع العملاء إلى محفظتك على الشبكة التي تختارها، ويرسلون في الوقت نفسه بيانات الاعتماد المطلوبة للتحقق.",
+          "statusLabel": "مستقر"
+        },
+        "zh-Hans": {
+          "summary": "验证客户并接受付款。",
+          "details": "商户销售点终端。输入加密货币金额或等值法币金额，并选择需要客户提供哪些凭证。客户在您选择的网络上向您的钱包付款，同时发送所需凭证以供验证。",
+          "statusLabel": "稳定版"
+        },
+        "zh-Hant": {
+          "summary": "驗證顧客並接受付款。",
+          "details": "商家銷售點終端機。輸入加密貨幣金額或等值法幣金額，並選取需要顧客提供哪些憑證。顧客會在您選擇的網路上向您的錢包付款，同時傳送所需的憑證以供驗證。",
+          "statusLabel": "穩定版"
+        },
+        "es": {
+          "summary": "Verificar a un cliente y aceptar pagos.",
+          "details": "Un terminal de punto de venta para comercios. Introduce un importe en criptomoneda o su equivalente en moneda fiat y selecciona qué credenciales del cliente son necesarias. Los clientes pagan a tu cartera en la red que elijas y, al mismo tiempo, envían las credenciales requeridas para su verificación.",
+          "statusLabel": "Estable"
+        },
+        "hi": {
+          "summary": "ग्राहक सत्यापित करें और भुगतान स्वीकार करें।",
+          "details": "व्यापारी के लिए पॉइंट-ऑफ़-सेल टर्मिनल। क्रिप्टोकरेंसी में या उसके बराबर फ़िएट मुद्रा में राशि दर्ज करें और चुनें कि ग्राहक के कौन से क्रेडेंशियल अनिवार्य हैं। ग्राहक आपके चुने हुए नेटवर्क पर आपके वॉलेट में भुगतान करते हैं, और साथ ही सत्यापन के लिए आवश्यक क्रेडेंशियल भेजते हैं।"
+        },
+        "fil": {
+          "summary": "I-verify ang customer at tumanggap ng pagbabayad.",
+          "details": "Isang point-of-sale terminal para sa merchant. Ilagay ang halaga sa cryptocurrency o katumbas na fiat na salapi, at piliin kung anong mga kredensyal ng customer ang kailangan. Nagbabayad ang mga customer papunta sa wallet mo sa network na pipiliin mo, at sabay nilang ipinapadala ang mga kinakailangang kredensyal para sa pag-verify."
+        },
+        "pt": {
+          "summary": "Verificar um cliente e aceitar pagamentos.",
+          "details": "Um terminal de ponto de venda para comerciantes. Introduza um valor em criptomoeda ou o equivalente em moeda fiat e selecione quais as credenciais do cliente que são exigidas. Os clientes pagam para a sua carteira na rede que escolher e, ao mesmo tempo, enviam as credenciais exigidas para verificação.",
+          "statusLabel": "Estável"
+        },
+        "ja": {
+          "summary": "顧客を検証して支払いを受け取ります。",
+          "details": "店舗向けのPOS端末です。暗号資産または同等の法定通貨で金額を入力し、顧客に求めるクレデンシャルを選択します。顧客は、選択したネットワーク上でウォレットに支払い、あわせて検証に必要なクレデンシャルを送信します。",
+          "statusLabel": "安定版"
+        },
+        "ru": {
+          "summary": "Проверяйте клиента и принимайте платежи.",
+          "details": "Кассовый терминал продавца. Укажите сумму в криптовалюте или эквивалент в фиатной валюте и выберите, какие удостоверения клиента требуются. Клиенты платят на ваш кошелёк в выбранной вами сети и одновременно отправляют нужные удостоверения для проверки.",
+          "statusLabel": "Стабильный"
+        },
+        "ur": {
+          "summary": "گاہک کی تصدیق کریں اور ادائیگیاں قبول کریں۔",
+          "details": "تاجر کے لیے پوائنٹ آف سیل ٹرمینل۔ کرپٹو کرنسی میں یا اس کے مساوی فیاٹ کرنسی میں رقم درج کریں اور منتخب کریں کہ گاہک کی کون سی اسناد درکار ہیں۔ گاہک آپ کے منتخب کردہ نیٹ ورک پر آپ کے والٹ میں ادائیگی کرتے ہیں اور ساتھ ہی تصدیق کے لیے مطلوبہ اسناد بھیجتے ہیں۔",
+          "statusLabel": "مستحکم"
+        },
+        "fr": {
+          "summary": "Vérifier un client et accepter des paiements.",
+          "details": "Un terminal de point de vente pour marchands. Saisissez un montant en cryptomonnaie ou son équivalent en devise, puis choisissez quelles attestations du client sont requises. Les clients paient vers votre portefeuille sur le réseau que vous choisissez et envoient en même temps les attestations requises pour vérification."
+        },
+        "de": {
+          "summary": "Einen Kunden prüfen und Zahlungen annehmen.",
+          "details": "Ein Kassenterminal für Händler. Gib einen Betrag in Kryptowährung oder den entsprechenden Betrag in Fiat-Währung ein und wähle, welche Nachweise des Kunden erforderlich sind. Kunden zahlen auf dem von dir gewählten Netzwerk an deine Wallet und senden gleichzeitig die erforderlichen Nachweise zur Prüfung.",
+          "statusLabel": "Stabil"
+        },
+        "ku": {
+          "summary": "Xerîdar piştrast bike û dayînan bistîne.",
+          "details": "Termînaleke xala firotanê ya firoşkar. Mîqdarekê bi kriptopere an bi diravê fiat ê hevber binivîse û hilbijêre kîjan belgenameyên xerîdar pêwîst in. Xerîdar li ser tora ku tu hilbijêrî dayînê didin cizdanê te û di heman demê de belgenameyên pêwîst ji bo piştrastkirinê dişînin.",
+          "statusLabel": "Stabîl"
+        },
+        "ckb": {
+          "summary": "کڕیار پشتڕاست بکە و پارەدان وەربگرە.",
+          "details": "تێرمیناڵێکی خاڵی فرۆشتن بۆ بازرگان. بڕێک بە دراوی کریپتۆیی یان بە هاوتای دراوی فەرمی بنووسە و هەڵبژێرە کام بڕوانامەی کڕیار پێویستە. کڕیارەکان لەسەر ئەو تۆڕەی تۆ هەڵیدەبژێریت پارە دەدەن بۆ جزدانەکەت و لە هەمان کاتدا بڕوانامە پێویستەکان بۆ پشتڕاستکردنەوە دەنێرن.",
+          "statusLabel": "جێگیر"
+        },
+        "bn": {
+          "summary": "গ্রাহক যাচাই করুন এবং পেমেন্ট গ্রহণ করুন।",
+          "details": "বিক্রেতার জন্য একটি পয়েন্ট-অফ-সেল টার্মিনাল। ক্রিপ্টোকারেন্সিতে বা সমমূল্যের ফিয়াট মুদ্রায় একটি পরিমাণ লিখুন এবং গ্রাহকের কোন কোন ক্রেডেনশিয়াল লাগবে তা বেছে নিন। গ্রাহকেরা আপনার বেছে নেওয়া নেটওয়ার্কে আপনার ওয়ালেটে পরিশোধ করেন, এবং সেই সঙ্গেই যাচাইয়ের জন্য প্রয়োজনীয় ক্রেডেনশিয়াল পাঠান।",
+          "statusLabel": "স্টেবল"
+        },
+        "ml": {
+          "summary": "ഉപഭോക്താവിനെ ഉറപ്പാക്കി പേയ്മെന്റുകൾ സ്വീകരിക്കുക.",
+          "details": "വ്യാപാരികൾക്കുള്ള ഒരു പോയിന്റ്-ഓഫ്-സെയിൽ ടെർമിനൽ. ക്രിപ്റ്റോകറൻസിയിലോ തത്തുല്യമായ ഫിയറ്റ് കറൻസിയിലോ ഒരു തുക നൽകുക, ഉപഭോക്താവിന്റെ ഏതൊക്കെ ക്രെഡൻഷ്യലുകൾ വേണമെന്ന് തിരഞ്ഞെടുക്കുക. നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന നെറ്റ്വർക്കിൽ ഉപഭോക്താക്കൾ നിങ്ങളുടെ വാലറ്റിലേക്ക് പണമടയ്ക്കും, ഒപ്പം തന്നെ ഉറപ്പാക്കാൻ വേണ്ട ക്രെഡൻഷ്യലുകളും അയയ്ക്കും.",
+          "statusLabel": "സ്റ്റേബിൾ"
+        },
+        "ta": {
+          "summary": "வாடிக்கையாளரைச் சரிபார்த்துப் பணம் பெறு.",
+          "details": "வணிகருக்கான ஒரு விற்பனைப் புள்ளி முனையம். கிரிப்டோகரன்சியிலோ அதற்கு நிகரான ஃபியட் நாணயத்திலோ ஒரு தொகையை உள்ளிட்டு, வாடிக்கையாளரிடமிருந்து எந்த அத்தாட்சிகள் தேவை என்பதைத் தேர்வுசெய். நீங்கள் தேர்வுசெய்த நெட்வொர்க்கில் வாடிக்கையாளர்கள் உங்கள் பணப்பைக்குப் பணம் செலுத்துவார்கள், அதே நேரத்தில் சரிபார்ப்புக்குத் தேவையான அத்தாட்சிகளையும் அனுப்புவார்கள்.",
+          "statusLabel": "நிலையானது"
+        },
+        "he": {
+          "summary": "אימות לקוח וקבלת תשלומים.",
+          "details": "מסוף נקודת מכירה לבית עסק. יש להזין סכום במטבע קריפטוגרפי או בערך המקביל במטבע פיאט, ולבחור אילו תעודות של הלקוח נדרשות. הלקוחות משלמים לארנק שלך ברשת שבחרת, ובמקביל שולחים את התעודות הנדרשות לאימות.",
+          "statusLabel": "יציב"
+        },
+        "fa": {
+          "summary": "راستی‌آزمایی مشتری و پذیرش پرداخت‌ها.",
+          "details": "یک پایانه فروش برای فروشنده. مقداری به رمزارز یا معادل آن به ارز فیات وارد کنید و انتخاب کنید کدام گواهی‌های مشتری لازم است. مشتریان روی شبکه‌ای که انتخاب می‌کنید به کیف پول شما پرداخت می‌کنند و هم‌زمان گواهی‌های لازم را برای راستی‌آزمایی می‌فرستند.",
+          "statusLabel": "پایدار"
+        },
+        "ko": {
+          "summary": "고객을 검증하고 결제를 받습니다.",
+          "details": "판매자용 POS 단말기입니다. 암호화폐 또는 같은 가치의 법정 화폐로 금액을 입력하고, 고객에게 요구할 자격증명을 선택하십시오. 고객은 선택한 네트워크에서 내 지갑으로 결제하고, 검증에 필요한 자격증명을 함께 보냅니다.",
+          "statusLabel": "정식"
+        },
+        "it": {
+          "summary": "Verifica un cliente e accetta pagamenti.",
+          "details": "Un terminale di punto vendita per esercenti. Inserisci un importo in criptovaluta o l'equivalente in valuta fiat e seleziona quali credenziali del cliente sono richieste. I clienti pagano al tuo wallet sulla rete che scegli e allo stesso tempo inviano le credenziali richieste per la verifica.",
+          "statusLabel": "Stabile"
+        },
+        "nl": {
+          "summary": "Een klant verifiëren en betalingen accepteren.",
+          "details": "Een kassaterminal voor verkopers. Voer een bedrag in cryptovaluta of de tegenwaarde in fiatvaluta in en kies welke bewijzen van de klant vereist zijn. Klanten betalen naar je wallet op het netwerk dat je kiest en sturen tegelijk de vereiste bewijzen mee voor verificatie.",
+          "statusLabel": "Stabiel"
+        },
+        "tr": {
+          "summary": "Müşteriyi doğrulayın ve ödeme alın.",
+          "details": "Satıcı için bir satış noktası terminali. Kripto para birimi veya karşılığı fiat para birimi cinsinden bir miktar girin ve hangi müşteri kimlik bilgilerinin gerektiğini seçin. Müşteriler seçtiğiniz ağ üzerinden cüzdanınıza ödeme yapar ve aynı anda doğrulama için gereken kimlik bilgilerini gönderir.",
+          "statusLabel": "Kararlı"
+        },
+        "sw": {
+          "summary": "Hakiki mteja na upokee malipo.",
+          "details": "Kituo cha mauzo cha mfanyabiashara. Andika kiasi kwa sarafu-fiche au sarafu ya fiat inayolingana, kisha chagua hati zipi za mteja zinahitajika. Wateja hulipa kwenye pochi yako kwenye mtandao unaouchagua, na wakati huo huo hutuma hati zinazohitajika ili kuhakikiwa.",
+          "statusLabel": "Thabiti"
+        },
+        "aa": {
+          "summary": "Zabuun cakkumus kee dafqooma bey.",
+          "details": "Taajirih muqaamala terminaal. Gide dijitaal maalu hinnay kaa celta qumla luk kutub, kaadu zabuunuk maca sumaqitte waajib kinnim door. Zabuunitte atu doorta netwerk amol ku waletil dafaqan, kaadu woo waqdil cakkumusuh waajib sumaqitte rubaanah."
+        },
+        "am": {
+          "summary": "ደንበኛን ያረጋግጡ እና ክፍያ ይቀበሉ።",
+          "details": "የነጋዴ የሽያጭ ነጥብ ተርሚናል። መጠኑን በክሪፕቶከረንሲ ወይም በተመጣጣኝ ምንዛሬ ያስገቡ እና የትኞቹ የደንበኛ ክሬደንሻሎች እንደሚያስፈልጉ ይምረጡ። ደንበኞች እርስዎ በሚመርጡት ኔትወርክ ላይ ወደ ቦርሳዎ ይከፍላሉ፣ በተመሳሳይ ጊዜም ለማረጋገጫ የሚያስፈልጉትን ክሬደንሻሎች ይልካሉ።",
+          "statusLabel": "ቋሚ"
+        },
+        "om": {
+          "summary": "Maamila mirkaneessii kaffaltii fudhadhu.",
+          "details": "Terminaala iddoo gurgurtaa daldalaa. Hanga qarshii kiriiptoodhaan yookaan maallaqa walqixaatiin galchi, waabiiwwan maamilaa kamtu barbaachisu filadhu. Maamiltoonni toora ati filatte irratti gara waaleetii keetiitti kaffalu, yeroma sanatti immoo waabiiwwan mirkaneessuuf barbaachisan ni ergu.",
+          "statusLabel": "Tasgabbaa'aa"
+        },
+        "so": {
+          "summary": "Macmiilka xaqiiji oo lacag qaado.",
+          "details": "Terminaal iibka ah oo ganacsade. Geli qadar lacag kripto ah ama lacag dowladeed u dhiganta, kadibna dooro shahaadooyinka macmiilka ee loo baahan yahay. Macmiiladu waxay lacagta ugu bixiyaan boorsadaada shabakadda aad dooratay, isla markaana waxay diraan shahaadooyinka loo baahan yahay ee xaqiijinta.",
+          "statusLabel": "Xasilloon"
+        },
+        "ti": {
+          "summary": "ዓሚል ኣረጋግጽ ከምኡ'ውን ክፍሊት ተቐበል.",
+          "details": "ናይ ነጋዳይ መሸጢ ተርሚናል. መጠን ብክሪፕቶ ባጤራ ወይ ብተመጣጣኒ ባጤራ ጽሓፍ, ከምኡ'ውን ኣየኖት ክረደንሻላት ዓሚል ከም ዘድልዩ ምረጽ. ዓማዊል ኣብቲ ንስኻ እትመርጾ መርበብ ናብ ዋሌትካ ይኸፍሉ, ኣብ ሓደ እዋን ከኣ ንምርግጋጽ ዘድልዩ ክረደንሻላት ይሰዱ.",
+          "statusLabel": "ስሪት Stable"
+        },
+        "vi": {
+          "summary": "Xác minh khách hàng và nhận thanh toán.",
+          "details": "Một máy POS dành cho người bán. Nhập số tiền bằng tiền mã hóa hoặc tiền fiat tương đương và chọn những chứng chỉ nào của khách hàng là bắt buộc. Khách hàng thanh toán vào ví của bạn trên mạng bạn chọn, đồng thời gửi các chứng chỉ cần thiết để xác minh.",
+          "statusLabel": "Ổn định"
+        }
+      }
     },
     {
       "id": "pos",
       "title": "Point of Sale",
       "summary": "Verify a customer and accept payments.",
-      "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers make payments on the network you choose to your wallet along with sending the required credentials to verify.",
+      "details": "A merchant point-of-sale terminal. Enter an amount in cryptocurrency or equivalent fiat currency and select which customer credentials are required. Customers pay to your wallet on the network you choose, and send the required credentials for verification at the same time.",
       "iconName": "creditcard.fill",
       "statusLabel": "Beta",
       "curatedBy": "Elabify",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "channel": "beta",
       "requiresMaknoonVersion": "0.6.3",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/manifest-beta.json",
-      "manifestSha256": "25d86a60aa67a2994e4fb760fff3c16bef66fc414e651a2c1dafde94c325da0f",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/releases/0.1.8/manifest.json",
+      "manifestSha256": "fd1b579ab5f9eb66cb1797563974c01fbe9958071af30219b50fe841503449e8",
       "permissions": [
         "identity",
         "wallet"
@@ -53,26 +201,177 @@
       "capabilities": [
         {
           "name": "identity",
-          "reason": "Verify each customer holds a sanctions-clean credential"
+          "reason": "Verify each customer has a sanctions screening with no match"
         },
         {
           "name": "wallet",
           "reason": "Read your receiving addresses across all networks, including assets and transaction history"
         }
-      ]
+      ],
+      "i18n": {
+        "ar": {
+          "summary": "التحقق من العميل وقبول المدفوعات.",
+          "details": "طرفية نقاط بيع للتاجر. أدخل مبلغاً بالعملة المشفّرة أو ما يعادله بالعملة الورقية، وحدد بيانات اعتماد العميل المطلوبة. يدفع العملاء إلى محفظتك على الشبكة التي تختارها، ويرسلون في الوقت نفسه بيانات الاعتماد المطلوبة للتحقق.",
+          "statusLabel": "مستقر"
+        },
+        "zh-Hans": {
+          "summary": "验证客户并接受付款。",
+          "details": "商户销售点终端。输入加密货币金额或等值法币金额，并选择需要客户提供哪些凭证。客户在您选择的网络上向您的钱包付款，同时发送所需凭证以供验证。",
+          "statusLabel": "稳定版"
+        },
+        "zh-Hant": {
+          "summary": "驗證顧客並接受付款。",
+          "details": "商家銷售點終端機。輸入加密貨幣金額或等值法幣金額，並選取需要顧客提供哪些憑證。顧客會在您選擇的網路上向您的錢包付款，同時傳送所需的憑證以供驗證。",
+          "statusLabel": "穩定版"
+        },
+        "es": {
+          "summary": "Verificar a un cliente y aceptar pagos.",
+          "details": "Un terminal de punto de venta para comercios. Introduce un importe en criptomoneda o su equivalente en moneda fiat y selecciona qué credenciales del cliente son necesarias. Los clientes pagan a tu cartera en la red que elijas y, al mismo tiempo, envían las credenciales requeridas para su verificación.",
+          "statusLabel": "Estable"
+        },
+        "hi": {
+          "summary": "ग्राहक सत्यापित करें और भुगतान स्वीकार करें।",
+          "details": "व्यापारी के लिए पॉइंट-ऑफ़-सेल टर्मिनल। क्रिप्टोकरेंसी में या उसके बराबर फ़िएट मुद्रा में राशि दर्ज करें और चुनें कि ग्राहक के कौन से क्रेडेंशियल अनिवार्य हैं। ग्राहक आपके चुने हुए नेटवर्क पर आपके वॉलेट में भुगतान करते हैं, और साथ ही सत्यापन के लिए आवश्यक क्रेडेंशियल भेजते हैं।"
+        },
+        "fil": {
+          "summary": "I-verify ang customer at tumanggap ng pagbabayad.",
+          "details": "Isang point-of-sale terminal para sa merchant. Ilagay ang halaga sa cryptocurrency o katumbas na fiat na salapi, at piliin kung anong mga kredensyal ng customer ang kailangan. Nagbabayad ang mga customer papunta sa wallet mo sa network na pipiliin mo, at sabay nilang ipinapadala ang mga kinakailangang kredensyal para sa pag-verify.",
+          "statusLabel": "Stable"
+        },
+        "pt": {
+          "summary": "Verificar um cliente e aceitar pagamentos.",
+          "details": "Um terminal de ponto de venda para comerciantes. Introduza um valor em criptomoeda ou o equivalente em moeda fiat e selecione quais as credenciais do cliente que são exigidas. Os clientes pagam para a sua carteira na rede que escolher e, ao mesmo tempo, enviam as credenciais exigidas para verificação.",
+          "statusLabel": "Estável"
+        },
+        "ja": {
+          "summary": "顧客を検証して支払いを受け取ります。",
+          "details": "店舗向けのPOS端末です。暗号資産または同等の法定通貨で金額を入力し、顧客に求めるクレデンシャルを選択します。顧客は、選択したネットワーク上でウォレットに支払い、あわせて検証に必要なクレデンシャルを送信します。",
+          "statusLabel": "安定版"
+        },
+        "ru": {
+          "summary": "Проверяйте клиента и принимайте платежи.",
+          "details": "Кассовый терминал продавца. Укажите сумму в криптовалюте или эквивалент в фиатной валюте и выберите, какие удостоверения клиента требуются. Клиенты платят на ваш кошелёк в выбранной вами сети и одновременно отправляют нужные удостоверения для проверки.",
+          "statusLabel": "Стабильный"
+        },
+        "ur": {
+          "summary": "گاہک کی تصدیق کریں اور ادائیگیاں قبول کریں۔",
+          "details": "تاجر کے لیے پوائنٹ آف سیل ٹرمینل۔ کرپٹو کرنسی میں یا اس کے مساوی فیاٹ کرنسی میں رقم درج کریں اور منتخب کریں کہ گاہک کی کون سی اسناد درکار ہیں۔ گاہک آپ کے منتخب کردہ نیٹ ورک پر آپ کے والٹ میں ادائیگی کرتے ہیں اور ساتھ ہی تصدیق کے لیے مطلوبہ اسناد بھیجتے ہیں۔",
+          "statusLabel": "مستحکم"
+        },
+        "fr": {
+          "summary": "Vérifier un client et accepter des paiements.",
+          "details": "Un terminal de point de vente pour marchands. Saisissez un montant en cryptomonnaie ou son équivalent en devise, puis choisissez quelles attestations du client sont requises. Les clients paient vers votre portefeuille sur le réseau que vous choisissez et envoient en même temps les attestations requises pour vérification.",
+          "statusLabel": "Stable"
+        },
+        "de": {
+          "summary": "Einen Kunden prüfen und Zahlungen annehmen.",
+          "details": "Ein Kassenterminal für Händler. Gib einen Betrag in Kryptowährung oder den entsprechenden Betrag in Fiat-Währung ein und wähle, welche Nachweise des Kunden erforderlich sind. Kunden zahlen auf dem von dir gewählten Netzwerk an deine Wallet und senden gleichzeitig die erforderlichen Nachweise zur Prüfung.",
+          "statusLabel": "Stabil"
+        },
+        "ku": {
+          "summary": "Xerîdar piştrast bike û dayînan bistîne.",
+          "details": "Termînaleke xala firotanê ya firoşkar. Mîqdarekê bi kriptopere an bi diravê fiat ê hevber binivîse û hilbijêre kîjan belgenameyên xerîdar pêwîst in. Xerîdar li ser tora ku tu hilbijêrî dayînê didin cizdanê te û di heman demê de belgenameyên pêwîst ji bo piştrastkirinê dişînin.",
+          "statusLabel": "Stabîl"
+        },
+        "ckb": {
+          "summary": "کڕیار پشتڕاست بکە و پارەدان وەربگرە.",
+          "details": "تێرمیناڵێکی خاڵی فرۆشتن بۆ بازرگان. بڕێک بە دراوی کریپتۆیی یان بە هاوتای دراوی فەرمی بنووسە و هەڵبژێرە کام بڕوانامەی کڕیار پێویستە. کڕیارەکان لەسەر ئەو تۆڕەی تۆ هەڵیدەبژێریت پارە دەدەن بۆ جزدانەکەت و لە هەمان کاتدا بڕوانامە پێویستەکان بۆ پشتڕاستکردنەوە دەنێرن.",
+          "statusLabel": "جێگیر"
+        },
+        "bn": {
+          "summary": "গ্রাহক যাচাই করুন এবং পেমেন্ট গ্রহণ করুন।",
+          "details": "বিক্রেতার জন্য একটি পয়েন্ট-অফ-সেল টার্মিনাল। ক্রিপ্টোকারেন্সিতে বা সমমূল্যের ফিয়াট মুদ্রায় একটি পরিমাণ লিখুন এবং গ্রাহকের কোন কোন ক্রেডেনশিয়াল লাগবে তা বেছে নিন। গ্রাহকেরা আপনার বেছে নেওয়া নেটওয়ার্কে আপনার ওয়ালেটে পরিশোধ করেন, এবং সেই সঙ্গেই যাচাইয়ের জন্য প্রয়োজনীয় ক্রেডেনশিয়াল পাঠান।",
+          "statusLabel": "স্টেবল"
+        },
+        "ml": {
+          "summary": "ഉപഭോക്താവിനെ ഉറപ്പാക്കി പേയ്മെന്റുകൾ സ്വീകരിക്കുക.",
+          "details": "വ്യാപാരികൾക്കുള്ള ഒരു പോയിന്റ്-ഓഫ്-സെയിൽ ടെർമിനൽ. ക്രിപ്റ്റോകറൻസിയിലോ തത്തുല്യമായ ഫിയറ്റ് കറൻസിയിലോ ഒരു തുക നൽകുക, ഉപഭോക്താവിന്റെ ഏതൊക്കെ ക്രെഡൻഷ്യലുകൾ വേണമെന്ന് തിരഞ്ഞെടുക്കുക. നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന നെറ്റ്വർക്കിൽ ഉപഭോക്താക്കൾ നിങ്ങളുടെ വാലറ്റിലേക്ക് പണമടയ്ക്കും, ഒപ്പം തന്നെ ഉറപ്പാക്കാൻ വേണ്ട ക്രെഡൻഷ്യലുകളും അയയ്ക്കും.",
+          "statusLabel": "സ്റ്റേബിൾ"
+        },
+        "ta": {
+          "summary": "வாடிக்கையாளரைச் சரிபார்த்துப் பணம் பெறு.",
+          "details": "வணிகருக்கான ஒரு விற்பனைப் புள்ளி முனையம். கிரிப்டோகரன்சியிலோ அதற்கு நிகரான ஃபியட் நாணயத்திலோ ஒரு தொகையை உள்ளிட்டு, வாடிக்கையாளரிடமிருந்து எந்த அத்தாட்சிகள் தேவை என்பதைத் தேர்வுசெய். நீங்கள் தேர்வுசெய்த நெட்வொர்க்கில் வாடிக்கையாளர்கள் உங்கள் பணப்பைக்குப் பணம் செலுத்துவார்கள், அதே நேரத்தில் சரிபார்ப்புக்குத் தேவையான அத்தாட்சிகளையும் அனுப்புவார்கள்.",
+          "statusLabel": "நிலையானது"
+        },
+        "he": {
+          "summary": "אימות לקוח וקבלת תשלומים.",
+          "details": "מסוף נקודת מכירה לבית עסק. יש להזין סכום במטבע קריפטוגרפי או בערך המקביל במטבע פיאט, ולבחור אילו תעודות של הלקוח נדרשות. הלקוחות משלמים לארנק שלך ברשת שבחרת, ובמקביל שולחים את התעודות הנדרשות לאימות.",
+          "statusLabel": "יציב"
+        },
+        "fa": {
+          "summary": "راستی‌آزمایی مشتری و پذیرش پرداخت‌ها.",
+          "details": "یک پایانه فروش برای فروشنده. مقداری به رمزارز یا معادل آن به ارز فیات وارد کنید و انتخاب کنید کدام گواهی‌های مشتری لازم است. مشتریان روی شبکه‌ای که انتخاب می‌کنید به کیف پول شما پرداخت می‌کنند و هم‌زمان گواهی‌های لازم را برای راستی‌آزمایی می‌فرستند.",
+          "statusLabel": "پایدار"
+        },
+        "ko": {
+          "summary": "고객을 검증하고 결제를 받습니다.",
+          "details": "판매자용 POS 단말기입니다. 암호화폐 또는 같은 가치의 법정 화폐로 금액을 입력하고, 고객에게 요구할 자격증명을 선택하십시오. 고객은 선택한 네트워크에서 내 지갑으로 결제하고, 검증에 필요한 자격증명을 함께 보냅니다.",
+          "statusLabel": "정식"
+        },
+        "it": {
+          "summary": "Verifica un cliente e accetta pagamenti.",
+          "details": "Un terminale di punto vendita per esercenti. Inserisci un importo in criptovaluta o l'equivalente in valuta fiat e seleziona quali credenziali del cliente sono richieste. I clienti pagano al tuo wallet sulla rete che scegli e allo stesso tempo inviano le credenziali richieste per la verifica.",
+          "statusLabel": "Stabile"
+        },
+        "nl": {
+          "summary": "Een klant verifiëren en betalingen accepteren.",
+          "details": "Een kassaterminal voor verkopers. Voer een bedrag in cryptovaluta of de tegenwaarde in fiatvaluta in en kies welke bewijzen van de klant vereist zijn. Klanten betalen naar je wallet op het netwerk dat je kiest en sturen tegelijk de vereiste bewijzen mee voor verificatie.",
+          "statusLabel": "Stabiel"
+        },
+        "tr": {
+          "summary": "Müşteriyi doğrulayın ve ödeme alın.",
+          "details": "Satıcı için bir satış noktası terminali. Kripto para birimi veya karşılığı fiat para birimi cinsinden bir miktar girin ve hangi müşteri kimlik bilgilerinin gerektiğini seçin. Müşteriler seçtiğiniz ağ üzerinden cüzdanınıza ödeme yapar ve aynı anda doğrulama için gereken kimlik bilgilerini gönderir.",
+          "statusLabel": "Kararlı"
+        },
+        "sw": {
+          "summary": "Hakiki mteja na upokee malipo.",
+          "details": "Kituo cha mauzo cha mfanyabiashara. Andika kiasi kwa sarafu-fiche au sarafu ya fiat inayolingana, kisha chagua hati zipi za mteja zinahitajika. Wateja hulipa kwenye pochi yako kwenye mtandao unaouchagua, na wakati huo huo hutuma hati zinazohitajika ili kuhakikiwa.",
+          "statusLabel": "Thabiti"
+        },
+        "aa": {
+          "summary": "Zabuun cakkumus kee dafqooma bey.",
+          "details": "Taajirih muqaamala terminaal. Gide dijitaal maalu hinnay kaa celta qumla luk kutub, kaadu zabuunuk maca sumaqitte waajib kinnim door. Zabuunitte atu doorta netwerk amol ku waletil dafaqan, kaadu woo waqdil cakkumusuh waajib sumaqitte rubaanah.",
+          "statusLabel": "Stable"
+        },
+        "am": {
+          "summary": "ደንበኛን ያረጋግጡ እና ክፍያ ይቀበሉ።",
+          "details": "የነጋዴ የሽያጭ ነጥብ ተርሚናል። መጠኑን በክሪፕቶከረንሲ ወይም በተመጣጣኝ ምንዛሬ ያስገቡ እና የትኞቹ የደንበኛ ክሬደንሻሎች እንደሚያስፈልጉ ይምረጡ። ደንበኞች እርስዎ በሚመርጡት ኔትወርክ ላይ ወደ ቦርሳዎ ይከፍላሉ፣ በተመሳሳይ ጊዜም ለማረጋገጫ የሚያስፈልጉትን ክሬደንሻሎች ይልካሉ።",
+          "statusLabel": "ቋሚ"
+        },
+        "om": {
+          "summary": "Maamila mirkaneessii kaffaltii fudhadhu.",
+          "details": "Terminaala iddoo gurgurtaa daldalaa. Hanga qarshii kiriiptoodhaan yookaan maallaqa walqixaatiin galchi, waabiiwwan maamilaa kamtu barbaachisu filadhu. Maamiltoonni toora ati filatte irratti gara waaleetii keetiitti kaffalu, yeroma sanatti immoo waabiiwwan mirkaneessuuf barbaachisan ni ergu.",
+          "statusLabel": "Tasgabbaa'aa"
+        },
+        "so": {
+          "summary": "Macmiilka xaqiiji oo lacag qaado.",
+          "details": "Terminaal iibka ah oo ganacsade. Geli qadar lacag kripto ah ama lacag dowladeed u dhiganta, kadibna dooro shahaadooyinka macmiilka ee loo baahan yahay. Macmiiladu waxay lacagta ugu bixiyaan boorsadaada shabakadda aad dooratay, isla markaana waxay diraan shahaadooyinka loo baahan yahay ee xaqiijinta.",
+          "statusLabel": "Xasilloon"
+        },
+        "ti": {
+          "summary": "ዓሚል ኣረጋግጽ ከምኡ'ውን ክፍሊት ተቐበል.",
+          "details": "ናይ ነጋዳይ መሸጢ ተርሚናል. መጠን ብክሪፕቶ ባጤራ ወይ ብተመጣጣኒ ባጤራ ጽሓፍ, ከምኡ'ውን ኣየኖት ክረደንሻላት ዓሚል ከም ዘድልዩ ምረጽ. ዓማዊል ኣብቲ ንስኻ እትመርጾ መርበብ ናብ ዋሌትካ ይኸፍሉ, ኣብ ሓደ እዋን ከኣ ንምርግጋጽ ዘድልዩ ክረደንሻላት ይሰዱ.",
+          "statusLabel": "ስሪት Stable"
+        },
+        "vi": {
+          "summary": "Xác minh khách hàng và nhận thanh toán.",
+          "details": "Một máy POS dành cho người bán. Nhập số tiền bằng tiền mã hóa hoặc tiền fiat tương đương và chọn những chứng chỉ nào của khách hàng là bắt buộc. Khách hàng thanh toán vào ví của bạn trên mạng bạn chọn, đồng thời gửi các chứng chỉ cần thiết để xác minh.",
+          "statusLabel": "Ổn định"
+        }
+      }
     },
     {
       "id": "uniswap-v4",
       "title": "UniswapV4",
       "summary": "Swap in a credential-gated Uniswap v4 pool.",
-      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain identity (ONCHAINID) unlocks the pool. Pools are discovered from the issuer registry (or entered manually), token details are read on-chain, and each swap shows its rate, fee tier, and minimum received. Swaps settle on the network you are connected to. The pilot pool trades a mock AUD stablecoin (AUDD) for a mock tokenized AUD money-market fund (MMF) on Base Sepolia.",
+      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain credential (ONCHAINID) unlocks the pool. Pools are discovered from the issuer registry (or entered manually), token details are read on-chain, and each swap shows its rate, fee tier, and minimum received. Swaps settle on the chain you are connected to. The pilot pool trades a mock AUD stablecoin (AUDD) for a mock tokenized AUD money-market fund (MMF) on Base Sepolia.",
       "iconName": "arrow.left.arrow.right.circle.fill",
       "statusLabel": "Stable",
       "curatedBy": "Elabify",
       "version": "0.2.0",
       "channel": "stable",
       "requiresMaknoonVersion": "0.6.7",
-      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/manifest.json",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/releases/0.2.0/manifest.json",
       "manifestSha256": "d790fad67b1ffe4799e484267e0b0585b857c26006fb7451f0abcf637f918cd8",
       "permissions": [
         "wallet.ethereum.read",
@@ -92,7 +391,339 @@
           "name": "identity",
           "reason": "Prove you are a verified, non-sanctioned human to access the pool"
         }
-      ]
+      ],
+      "i18n": {
+        "ar": {
+          "summary": "المبادلة في مجمع Uniswap v4 مقيَّد ببيانات الاعتماد.",
+          "details": "مبادلة تجزئة في مجمع Uniswap v4 لا يسمح إلا للأشخاص الموثقين وغير الخاضعين للعقوبات. أثبت مرة واحدة أنك شخص حقيقي باستخدام بيانات اعتماد جواز سفرك، فتفتح بيانات اعتمادك المحمولة على السلسلة (ONCHAINID) المجمع. تُكتشف المجمعات من سجل جهة الإصدار (أو تُدخل يدوياً)، وتُقرأ تفاصيل الرموز على السلسلة، وتعرض كل مبادلة سعرها وشريحة رسومها والحد الأدنى المستلم. تُسوّى المبادلات على السلسلة المتصل بها. يتداول المجمع التجريبي عملة مستقرة تجريبية بالدولار الأسترالي (AUDD) مقابل صندوق سوق نقد تجريبي مُرمَّز بالدولار الأسترالي (MMF) على Base Sepolia.",
+          "statusLabel": "مستقر"
+        },
+        "zh-Hans": {
+          "summary": "在凭证门控的 Uniswap v4 资金池中兑换。",
+          "details": "在仅允许经过验证且未受制裁的真人参与的 Uniswap v4 资金池中进行零售兑换。用您的护照凭证证明一次真人身份，您的可携带链上凭证 (ONCHAINID) 便会解锁资金池。资金池从发行方注册表中发现（也可手动输入），代币详情从链上读取，每笔兑换都会显示其汇率、费率档和最少收到数量。兑换在您所连接的链上结算。试点资金池在 Base Sepolia 上以模拟 AUD 稳定币 (AUDD) 兑换模拟代币化 AUD 货币市场基金 (MMF)。",
+          "statusLabel": "稳定版"
+        },
+        "zh-Hant": {
+          "summary": "在受憑證門檻限制的 Uniswap v4 資金池中兌換。",
+          "details": "在僅允許已驗證且未受制裁的真人加入的 Uniswap v4 資金池中進行零售兌換。以您的護照憑證證明一次真人身分，您可攜的鏈上憑證（ONCHAINID）就會解鎖此資金池。資金池會從簽發方註冊表搜尋取得（也可手動輸入），代幣詳細資料會在鏈上讀取，每筆兌換都會顯示其匯率、費率級距和最少收到金額。兌換會在您所連線的鏈上結算。試辦資金池在 Base Sepolia 上以模擬的 AUD 穩定幣（AUDD）兌換模擬的代幣化 AUD 貨幣市場基金（MMF）。",
+          "statusLabel": "穩定版"
+        },
+        "es": {
+          "summary": "Intercambiar en un pool de Uniswap v4 restringido por credencial.",
+          "details": "Un intercambio minorista en un pool de Uniswap v4 que solo admite personas verificadas y sin sanciones. Demuestra una sola vez con tu credencial de pasaporte que eres una persona, y tu credencial portátil en la cadena (ONCHAINID) desbloquea el pool. Los pools se descubren desde el registro del emisor (o se introducen a mano), los detalles del token se leen en la cadena y cada intercambio muestra su tasa, su nivel de comisión y el mínimo recibido. Los intercambios se liquidan en la cadena a la que estés conectado. El pool piloto intercambia una stablecoin de AUD de prueba (AUDD) por un fondo del mercado monetario en AUD tokenizado y de prueba (MMF) en Base Sepolia.",
+          "statusLabel": "Estable"
+        },
+        "hi": {
+          "summary": "क्रेडेंशियल-गेटेड Uniswap v4 पूल में स्वैप करें।",
+          "details": "एक Uniswap v4 पूल में रिटेल स्वैप, जो केवल सत्यापित, गैर-प्रतिबंधित इंसानों को ही प्रवेश देता है। अपने पासपोर्ट क्रेडेंशियल से एक बार साबित करें कि आप इंसान हैं, और आपका पोर्टेबल ऑन-चेन क्रेडेंशियल (ONCHAINID) पूल को अनलॉक कर देता है। पूल जारीकर्ता रजिस्ट्री से मिलते हैं (या मैन्युअल रूप से दर्ज किए जाते हैं), टोकन का विवरण ऑन-चेन पढ़ा जाता है, और हर स्वैप उसकी दर, शुल्क स्तर और न्यूनतम प्राप्ति दिखाता है। स्वैप उसी चेन पर निपटते हैं जिससे आप कनेक्ट हैं। पायलट पूल Base Sepolia पर एक मॉक AUD स्टेबलकॉइन (AUDD) को एक मॉक टोकनाइज़्ड AUD मनी-मार्केट फ़ंड (MMF) से बदलता है।"
+        },
+        "fil": {
+          "summary": "Mag-swap sa isang credential-gated na Uniswap v4 pool.",
+          "details": "Isang retail na swap sa isang Uniswap v4 pool na tanging na-verify at walang sanction na tao lang ang pinapapasok. Patunayan nang minsan gamit ang kredensyal ng pasaporte mo na tao ka, at ang portable, on-chain na kredensyal mo (ONCHAINID) ang magbubukas ng pool. Nahahanap ang mga pool mula sa rehistro ng issuer (o mailalagay nang manual), binabasa on-chain ang detalye ng token, at ipinapakita ng bawat swap ang rate, antas ng bayarin, at min na matatanggap nito. Nagse-settle ang mga swap sa chain na nakakonekta ka. Ipinagpapalit ng pilot pool ang isang mock na AUD stablecoin (AUDD) para sa isang mock na tokenized na AUD money-market fund (MMF) sa Base Sepolia."
+        },
+        "pt": {
+          "summary": "Trocar numa pool Uniswap v4 que exige credencial.",
+          "details": "Uma troca de retalho numa pool Uniswap v4 que admite apenas pessoas verificadas e sem sanções. Prove uma vez com a credencial do seu passaporte que é uma pessoa, e a sua credencial on-chain portátil (ONCHAINID) desbloqueia a pool. As pools são descobertas a partir do registo do emissor (ou introduzidas manualmente), os detalhes dos tokens são lidos on-chain e cada troca mostra o câmbio, o nível de taxa e o mínimo recebido. As trocas são liquidadas na cadeia a que está ligado. A pool piloto troca uma stablecoin AUD fictícia (AUDD) por um fundo do mercado monetário AUD tokenizado fictício (MMF) em Base Sepolia.",
+          "statusLabel": "Estável"
+        },
+        "ja": {
+          "summary": "クレデンシャルで制限されたUniswap v4プールでスワップします。",
+          "details": "検証済みで制裁リストに該当しない人間のみが参加できるUniswap v4プールでの個人向けスワップです。パスポートのクレデンシャルで一度だけ人間であることを証明すると、ポータブルなオンチェーンクレデンシャル (ONCHAINID) がプールのロックを解除します。プールは発行者レジストリから検出されます（手動で入力することもできます）。トークンの詳細はオンチェーンで読み取られ、スワップごとにレート、手数料ティア、最小受取額が表示されます。スワップは接続中のチェーン上で決済されます。パイロットプールは、Base Sepolia上でモックのAUDステーブルコイン (AUDD) と、モックのトークン化AUDマネー・マーケット・ファンド (MMF) を取引します。",
+          "statusLabel": "安定版"
+        },
+        "ru": {
+          "summary": "Совершайте обмен в пуле Uniswap v4 с доступом по удостоверению.",
+          "details": "Розничный обмен в пуле Uniswap v4, куда допускаются только проверенные люди без санкций. Один раз подтвердите паспортным удостоверением, что вы человек, и ваше переносимое удостоверение в блокчейне (ONCHAINID) откроет пул. Пулы находятся по реестру эмитентов (или вводятся вручную), данные токенов читаются в блокчейне, а по каждому обмену показываются курс, уровень комиссии и минимум к получению. Обмены исполняются в блокчейне, к которому вы подключены. В пилотном пуле обменивается имитация стейблкоина AUD (AUDD) на имитацию токенизированного фонда денежного рынка в AUD (MMF) в Base Sepolia.",
+          "statusLabel": "Стабильный"
+        },
+        "ur": {
+          "summary": "سند سے محدود Uniswap v4 پول میں تبادلہ کریں۔",
+          "details": "Uniswap v4 پول میں ایک ریٹیل تبادلہ جو صرف تصدیق شدہ، پابندیوں سے پاک انسانوں کو داخلہ دیتا ہے۔ اپنی پاسپورٹ سند سے ایک بار ثابت کریں کہ آپ انسان ہیں، اور آپ کی قابل منتقلی آن چین سند (ONCHAINID) پول کو ان لاک کر دیتی ہے۔ پول جاری کنندہ کی رجسٹری سے دریافت ہوتے ہیں (یا دستی طور پر درج کیے جاتے ہیں)، ٹوکن کی تفصیلات آن چین پڑھی جاتی ہیں، اور ہر تبادلہ اپنی شرح تبادلہ، فیس کا درجہ اور کم سے کم موصول رقم دکھاتا ہے۔ تبادلے اس چین پر طے پاتے ہیں جس سے آپ منسلک ہیں۔ آزمائشی پول Base Sepolia پر ایک فرضی آسٹریلوی ڈالر اسٹیبل کوائن (AUDD) کا ایک فرضی ٹوکنائزڈ آسٹریلوی ڈالر منی مارکیٹ فنڈ (MMF) سے تبادلہ کرتا ہے۔",
+          "statusLabel": "مستحکم"
+        },
+        "fr": {
+          "summary": "Échanger dans un pool Uniswap v4 conditionné à une attestation.",
+          "details": "Un échange de détail dans un pool Uniswap v4 qui n'admet que des humains vérifiés et non sanctionnés. Prouvez une seule fois avec votre attestation de passeport que vous êtes un humain, et votre attestation on-chain portable (ONCHAINID) déverrouille le pool. Les pools sont découverts depuis le registre de l'émetteur (ou saisis manuellement), les détails des jetons sont lus on-chain, et chaque échange affiche son taux, son palier de frais et le minimum reçu. Les échanges sont réglés sur la chaîne à laquelle vous êtes connecté. Le pool pilote échange un stablecoin AUD fictif (AUDD) contre un fonds monétaire AUD tokenisé fictif (MMF) sur Base Sepolia."
+        },
+        "de": {
+          "summary": "In einem nachweisgeschützten Uniswap v4-Pool swappen.",
+          "details": "Ein Retail-Swap in einem Uniswap v4-Pool, der nur verifizierte, nicht sanktionierte Menschen zulässt. Belege einmalig mit deinem Passnachweis, dass du ein Mensch bist, und dein portabler On-Chain-Nachweis (ONCHAINID) schaltet den Pool frei. Pools werden über das Register des Ausstellers gefunden (oder manuell eingegeben), Token-Details werden on-chain gelesen, und jeder Swap zeigt seinen Kurs, seine Gebührenstufe und den Mindestbetrag, den du erhältst. Swaps werden auf der Chain abgewickelt, mit der du verbunden bist. Der Pilot-Pool handelt einen fiktiven AUD-Stablecoin (AUDD) gegen einen fiktiven tokenisierten AUD-Geldmarktfonds (MMF) auf Base Sepolia.",
+          "statusLabel": "Stabil"
+        },
+        "ku": {
+          "summary": "Di Pooleke Uniswap v4 ya bi belgename ve sînorkirî de Swap bike.",
+          "details": "Swapek perakende di Pooleke Uniswap v4 de ku tenê mirovên piştrastkirî yên ne di lîsteya cezayan de dipejirîne. Carekê bi belgenameya pasaporta xwe îsbat bike ku tu mirov î, û belgenameya te ya On-chain a guhêzbar (ONCHAINID) Poolê vedike. Pool ji qeydgeha derxistkeran tên dîtin (an bi destan tên nivîsîn), hûrguliyên tokenan On-chain tên xwendin, û her Swap kursa xwe, asta xercê û wergirtina herî kêm nîşan dide. Swap li ser chaina ku tu pê ve girêdayî yî tên temamkirin. Poola pîlot li ser Base Sepolia stablecoinek AUD a testê (AUDD) bi fondek bazara diravî ya AUD a tokenkirî ya testê (MMF) re Swap dike.",
+          "statusLabel": "Stabîl"
+        },
+        "ckb": {
+          "summary": "ئاڵوگۆڕ لە حەوزێکی Uniswap v4 دا کە بە بڕوانامە پارێزراوە.",
+          "details": "ئاڵوگۆڕێکی وردەفرۆشی لە حەوزێکی Uniswap v4 دا کە تەنها مرۆڤی پشتڕاستکراو و سزانەدراو قبووڵ دەکات. جارێک بە بڕوانامەی پاسپۆرتەکەت بسەلمێنە کە مرۆڤیت، و بڕوانامەی گواستراوەی لەسەر زنجیرەی تۆ (ONCHAINID) حەوزەکە دەکاتەوە. حەوزەکان لە تۆمارگەی دەرکەرەوە دەدۆزرێنەوە (یان بە دەست دەنووسرێن)، وردەکاریی تۆکنەکان لەسەر زنجیرە دەخوێنرێنەوە، و هەر ئاڵوگۆڕێک نرخ، پلەی کرێ و کەمترین وەرگیراوی خۆی پیشان دەدات. ئاڵوگۆڕەکان لەسەر ئەو زنجیرەیەی پێوەی پەیوەستیت جێبەجێ دەبن. حەوزی پایلۆت لەسەر Base Sepolia ستەیبڵکۆینێکی تاقیکاریی AUD (AUDD) بە سندوقێکی تاقیکاریی تۆکنکراوی بازاڕی پارەی AUD (MMF) ئاڵوگۆڕ دەکات.",
+          "statusLabel": "جێگیر"
+        },
+        "bn": {
+          "summary": "ক্রেডেনশিয়াল দিয়ে সীমিত একটি Uniswap v4 পুলে সোয়াপ করুন।",
+          "details": "একটি Uniswap v4 পুলে খুচরা সোয়াপ, যেখানে শুধু যাচাই হওয়া, নিষেধাজ্ঞাভুক্ত নয় এমন মানুষ প্রবেশ করতে পারে। আপনার পাসপোর্ট ক্রেডেনশিয়াল দিয়ে একবার প্রমাণ করুন যে আপনি একজন মানুষ, তাহলেই আপনার বহনযোগ্য অন-চেইন ক্রেডেনশিয়াল (ONCHAINID) পুলটি আনলক করে দেয়। পুল ইস্যুকারী রেজিস্ট্রি থেকে খুঁজে পাওয়া যায় (অথবা হাতে লেখা যায়), টোকেনের বিবরণ অন-চেইন থেকে পড়া হয়, এবং প্রতিটি সোয়াপে তার দর, ফি স্তর ও সর্বনিম্ন প্রাপ্তি দেখানো হয়। আপনি যে চেইনে সংযুক্ত, সোয়াপ সেই চেইনেই নিষ্পত্তি হয়। পাইলট পুলটি Base Sepolia-তে একটি মক AUD স্টেবলকয়েন (AUDD) ও একটি মক টোকেনাইজড AUD মানি-মার্কেট ফান্ড (MMF)-এর মধ্যে লেনদেন করে।",
+          "statusLabel": "স্টেবল"
+        },
+        "ml": {
+          "summary": "ക്രെഡൻഷ്യൽ-നിയന്ത്രിത Uniswap v4 പൂളിൽ സ്വാപ്പ് ചെയ്യുക.",
+          "details": "ഉറപ്പാക്കിയ, ഉപരോധ പട്ടികയിലില്ലാത്ത മനുഷ്യരെ മാത്രം അനുവദിക്കുന്ന ഒരു Uniswap v4 പൂളിലെ റീട്ടെയിൽ സ്വാപ്പ്. പാസ്പോർട്ട് ക്രെഡൻഷ്യൽ ഉപയോഗിച്ച് നിങ്ങൾ മനുഷ്യനാണെന്ന് ഒരിക്കൽ തെളിയിച്ചാൽ, നിങ്ങളുടെ പോർട്ടബിൾ ഓൺ-ചെയിൻ ക്രെഡൻഷ്യൽ (ONCHAINID) പൂൾ അൺലോക്ക് ചെയ്യും. പൂളുകൾ ഇഷ്യൂവർ രജിസ്ട്രിയിൽ നിന്ന് കണ്ടെത്തും (അല്ലെങ്കിൽ നേരിട്ട് നൽകാം), ടോക്കൺ വിവരങ്ങൾ ഓൺ-ചെയിൻ വായിക്കും, ഓരോ സ്വാപ്പും അതിന്റെ നിരക്ക്, ഫീസ് ടയർ, കുറഞ്ഞത് ലഭിക്കുന്നത് എന്നിവ കാണിക്കും. നിങ്ങൾ ബന്ധിപ്പിച്ചിരിക്കുന്ന ചെയിനിലാണ് സ്വാപ്പുകൾ തീർപ്പാക്കുന്നത്. പൈലറ്റ് പൂൾ Base Sepolia-യിൽ ഒരു മോക്ക് AUD സ്റ്റേബിൾകോയിനും (AUDD) ഒരു മോക്ക് ടോക്കണൈസ്ഡ് AUD മണി-മാർക്കറ്റ് ഫണ്ടും (MMF) തമ്മിൽ വ്യാപാരം ചെയ്യുന്നു.",
+          "statusLabel": "സ്റ്റേബിൾ"
+        },
+        "ta": {
+          "summary": "அத்தாட்சியால் கட்டுப்படுத்தப்பட்ட Uniswap v4 பூலில் பரிமாற்று.",
+          "details": "சரிபார்க்கப்பட்ட, தடைப்பட்டியலில் இல்லாத மனிதர்களை மட்டுமே அனுமதிக்கும் Uniswap v4 பூலில் ஒரு சில்லறைப் பரிமாற்றம். உங்கள் கடவுச்சீட்டு அத்தாட்சி மூலம் நீங்கள் மனிதர் என்பதை ஒருமுறை நிரூபித்தால், செயினில் உள்ள, கொண்டுசெல்லக்கூடிய உங்கள் அத்தாட்சி (ONCHAINID) பூலின் பூட்டைத் திறக்கும். பூல்கள் வழங்குநர் பதிவேட்டிலிருந்து கண்டறியப்படும் (அல்லது கைமுறையாக உள்ளிடலாம்), டோக்கன் விவரங்கள் செயினில் படிக்கப்படும், ஒவ்வொரு பரிமாற்றமும் அதன் மாற்று விகிதம், கட்டண நிலை, குறைந்தபட்சம் பெறுவது ஆகியவற்றைக் காட்டும். நீங்கள் இணைந்திருக்கும் செயினில் பரிமாற்றங்கள் தீர்க்கப்படும். சோதனைப் பூல், Base Sepolia இல் ஒரு போலி AUD ஸ்டேபிள்காயினுக்கும் (AUDD) ஒரு போலி டோக்கனாக்கப்பட்ட AUD பணச்சந்தை நிதிக்கும் (MMF) இடையே வர்த்தகம் செய்யும்.",
+          "statusLabel": "நிலையானது"
+        },
+        "he": {
+          "summary": "החלפה בבריכת Uniswap v4 המוגבלת לתעודה.",
+          "details": "החלפה קמעונאית בבריכת Uniswap v4 שמתירה כניסה רק לאנשים מאומתים שאינם תחת סנקציות. יש להוכיח פעם אחת באמצעות תעודת הדרכון שמדובר באדם, והתעודה הניידת שלך בשרשרת (ONCHAINID) פותחת את נעילת הבריכה. הבריכות מאותרות מתוך מרשם המנפיק (או מוזנות ידנית), פרטי הטוקנים נקראים בשרשרת, וכל החלפה מציגה את השער שלה, את דרגת העמלה ואת המינימום לקבלה. ההחלפות נסלקות בשרשרת שאליה התחברת. הבריכה הניסיונית מחליפה מטבע יציב מדומה בדולר אוסטרלי (AUDD) בקרן כספית מדומה בדולר אוסטרלי בצורת טוקן (MMF) ב-Base Sepolia.",
+          "statusLabel": "יציב"
+        },
+        "fa": {
+          "summary": "مبادله در استخر Uniswap v4 محدودشده با گواهی.",
+          "details": "یک مبادله خرد در استخر Uniswap v4 که فقط انسان‌های معتبر و غیرتحریمی را می‌پذیرد. یک بار با گواهی گذرنامه خود ثابت کنید که انسان هستید، و گواهی قابل حمل شما روی زنجیره (ONCHAINID) استخر را باز می‌کند. استخرها از رجیستری صادرکننده کشف می‌شوند (یا دستی وارد می‌شوند)، جزئیات توکن روی زنجیره خوانده می‌شود، و هر مبادله نرخ، رده کارمزد و حداقل دریافتی خود را نشان می‌دهد. مبادله‌ها روی زنجیره‌ای که به آن وصل هستید تسویه می‌شوند. استخر آزمایشی یک استیبل‌کوین ساختگی دلار استرالیا (AUDD) را با یک صندوق بازار پول توکنی‌شده ساختگی دلار استرالیا (MMF) روی Base Sepolia مبادله می‌کند.",
+          "statusLabel": "پایدار"
+        },
+        "ko": {
+          "summary": "자격증명으로 제한된 Uniswap v4 풀에서 스왑합니다.",
+          "details": "검증되고 제재 대상이 아닌 사람만 허용하는 Uniswap v4 풀에서의 소매 스왑입니다. 여권 자격증명으로 사람임을 한 번 증명하면, 이동 가능한 온체인 자격증명 (ONCHAINID)로 풀이 열립니다. 풀은 발급자 레지스트리에서 검색하거나 직접 입력할 수 있으며, 토큰 정보는 온체인에서 읽어 오고, 스왑마다 환율, 수수료 등급, 최소 수령량을 표시합니다. 스왑은 연결된 체인에서 정산됩니다. 파일럿 풀은 Base Sepolia에서 모의 AUD 스테이블코인 (AUDD)를 모의 토큰화 AUD 머니마켓펀드 (MMF)로 교환합니다.",
+          "statusLabel": "정식"
+        },
+        "it": {
+          "summary": "Scambia in un pool Uniswap v4 protetto da credenziale.",
+          "details": "Uno scambio al dettaglio in un pool Uniswap v4 che ammette solo persone verificate e non sanzionate. Dimostra una sola volta con la credenziale del passaporto di essere una persona, e la tua credenziale on-chain portatile (ONCHAINID) sblocca il pool. I pool vengono individuati dal registro dell'emittente (o inseriti manualmente), i dettagli dei token vengono letti on-chain e ogni scambio mostra il tasso, la fascia di commissione e il minimo ricevuto. Gli scambi vengono regolati sulla chain a cui sei connesso. Il pool pilota scambia una stablecoin AUD fittizia (AUDD) con un fondo monetario AUD tokenizzato fittizio (MMF) su Base Sepolia.",
+          "statusLabel": "Stabile"
+        },
+        "nl": {
+          "summary": "Swappen in een Uniswap v4-pool die een bewijs vereist.",
+          "details": "Een retailswap in een Uniswap v4-pool die alleen geverifieerde, niet-gesanctioneerde mensen toelaat. Toon eenmalig met je paspoortbewijs dat je een mens bent, en je portable on-chain bewijs (ONCHAINID) ontgrendelt de pool. Pools worden gevonden via het register van de uitgever (of handmatig ingevoerd), tokendetails worden on-chain gelezen en elke swap toont de koers, het kostenniveau en het minimaal ontvangen bedrag. Swaps worden afgewikkeld op de chain waarmee je verbonden bent. De pilotpool verhandelt een fictieve AUD-stablecoin (AUDD) tegen een fictief getokeniseerd AUD-geldmarktfonds (MMF) op Base Sepolia.",
+          "statusLabel": "Stabiel"
+        },
+        "tr": {
+          "summary": "Kimlik bilgisi ile kısıtlı bir Uniswap v4 havuzunda takas yapın.",
+          "details": "Yalnızca doğrulanmış, yaptırımsız kişileri kabul eden bir Uniswap v4 havuzunda perakende takas. Pasaport kimlik bilginizle bir kez kişi olduğunuzu kanıtlayın; taşınabilir zincir üstü kimlik bilginiz (ONCHAINID) havuzun kilidini açar. Havuzlar verenler kayıt defterinden bulunur (veya elle girilir), token ayrıntıları zincir üstünde okunur ve her takas kendi kurunu, ücret kademesini ve minimum alınan tutarı gösterir. Takaslar bağlı olduğunuz zincirde gerçekleşir. Pilot havuz, Base Sepolia üzerinde test amaçlı bir AUD stablecoin'i (AUDD) ile test amaçlı, tokenleştirilmiş bir AUD para piyasası fonunu (MMF) takas eder.",
+          "statusLabel": "Kararlı"
+        },
+        "sw": {
+          "summary": "Fanya swap katika pool ya Uniswap v4 inayohitaji hati.",
+          "details": "Swap ya reja reja katika pool ya Uniswap v4 inayoruhusu tu watu waliohakikiwa, wasio na vikwazo. Thibitisha mara moja kwa hati yako ya pasipoti kuwa wewe ni mtu, na hati yako inayohamishika ya on-chain (ONCHAINID) hufungua pool. Pool hupatikana kutoka rejista ya watoaji (au huandikwa kwa mkono), maelezo ya token husomwa on-chain, na kila swap huonyesha kiwango chake, daraja la ada, na kiasi cha chini. Swap hukamilika kwenye chain uliyoungana nayo. Pool ya majaribio inabadilisha stablecoin ya mfano ya AUD (AUDD) na mfuko wa mfano wa soko la fedha wa AUD uliogeuzwa kuwa token (MMF) kwenye Base Sepolia.",
+          "statusLabel": "Thabiti"
+        },
+        "aa": {
+          "summary": "Sumaq luk kuflimeh Uniswap v4 Poolil wal-korsis.",
+          "details": "Cakkumsimeh, qukuubat mali sinam dibuk culusa Uniswap v4 Poolil yan dago muqaamala wal-korsis. Inki adda ku baasboor sumaq luk seehadaytu kinnitom cujjat hay, ku gexsimta Chainil sumaq (ONCHAINID) Pool kufli faka. Poolitte musdirih Kutbiisok geytiman (hinnay gabah kutbiman), Token baxxaqqa Chainil akriyimta, kulli wal-korsis isi siqir, ujra daraja, kee dago beyo ubullusa. Wal-korsisitte atu xagsimteh tan Chain amol duudusiman. Tijriibat Pool Base Sepolia amol AUD tijriibat stablecoin (AUDD) kee AUD tijriibat token luk yan maalu-suuk sanduuk (MMF) wal-korsisa."
+        },
+        "am": {
+          "summary": "በክሬደንሻል በተከለለ የUniswap v4 ፑል ውስጥ ይመንዝሩ።",
+          "details": "የተረጋገጡ፣ ማዕቀብ ያልተጣለባቸው ሰዎችን ብቻ በሚቀበል የUniswap v4 ፑል ውስጥ የችርቻሮ ምንዛሪ። በፓስፖርት ክሬደንሻልዎ ሰው መሆንዎን አንድ ጊዜ ያረጋግጡ፤ ተንቀሳቃሽ በቼይን ላይ ክሬደንሻልዎ (ONCHAINID) ፑሉን ይከፍታል። ፑሎች ከአውጪዎች መዝገብ ይገኛሉ (ወይም በእጅ ይገባሉ)፣ የቶከን ዝርዝሮች ከቼይኑ ይነበባሉ፣ እና እያንዳንዱ ምንዛሪ ተመኑን፣ የኮሚሽን እርከኑንና ዝቅተኛ የሚቀበሉትን ያሳያል። ምንዛሪዎቹ እርስዎ በተገናኙበት ቼይን ላይ ይፈጸማሉ። የሙከራ ፑሉ በBase Sepolia ላይ የAUD ናሙና ስቴብልኮይን (AUDD) ከናሙና በቶከን የተደረገ የAUD የገንዘብ ገበያ ፈንድ (MMF) ጋር ይመነዝራል።",
+          "statusLabel": "ቋሚ"
+        },
+        "om": {
+          "summary": "Pool Uniswap v4 waabii gaafatu keessatti jijjiiri.",
+          "details": "Pool Uniswap v4 namoota mirkanaa'anii fi hin adabamne qofa fudhatu keessatti jijjiirraa daldala xiqqaa. Waabii paaspoortii keetiin nama ta'uu kee al tokko ragaa ba'i, waabiin kee chain irratti kan baadhatamu (ONCHAINID) pool siif fura. Poolonni galmee kennituu irraa argamu (yookaan harkaan galchamu), bal'inni token chain irratti dubbifama, jijjiirraan hundi gatii jijjiirraa isaa, sadarkaa qaraxaa fi gadaanaa fudhatamu ni agarsiisa. Jijjiirraan chain ati itti hidhamte irratti raawwatama. Pooliin yaalii Base Sepolia irratti stablecoin AUD fakkeenyaa (AUDD) fandii gabaa maallaqaa AUD tokeneffame fakkeenyaa (MMF) waliin jijjiira.",
+          "statusLabel": "Tasgabbaa'aa"
+        },
+        "so": {
+          "summary": "Ku sarrif Pool Uniswap v4 oo shahaado ku xiran.",
+          "details": "Sarrif tafaariiq ah oo ka dhacaya Pool Uniswap v4 oo kaliya oggolaanaya dad la xaqiijiyay oo aan cunaqabatayn saarnayn. Hal mar ku caddee shahaadada baasaboorkaaga inaad qof tahay, shahaadadaada silsilada ku jirta ee la qaadan karo (ONCHAINID) ayaana Pool-ka furaya. Pool-asha waxaa laga helaa diiwaanka soo saarayaasha (ama gacanta ayaa lagu galiyaa), faahfaahinta Token-ka silsilada ayaa laga akhriyaa, sarrif kastana wuxuu muujiyaa sicirkiisa, darajada khidmadda, iyo ugu yaraan la helayo. Sarrifyadu waxay ku dhamaystirmaan silsilada aad ku xiran tahay. Pool-ka tijaabada ah wuxuu Base Sepolia ku sarrifaa stablecoin AUD tusaale ah (AUDD) iyo sanduuq suuqa lacagta AUD oo token laga dhigay oo tusaale ah (MMF).",
+          "statusLabel": "Xasilloon"
+        },
+        "ti": {
+          "summary": "ኣብ ብክረደንሻል ዝዕጾ ናይ Uniswap v4 ፑል ስዋፕ ግበር.",
+          "details": "ዝተረጋገጹ, ኣብ ማዕቀብ ዘየለዉ ሰባት ጥራይ ኣብ ዘፍቅድ ናይ Uniswap v4 ፑል ዝግበር ናይ ችርቻሮ ስዋፕ. ብክረደንሻል ፓስፖርትካ ሰብ ምዃንካ ሓንሳብ ኣረጋግጽ, እቲ ኣብ ሰንሰለት ዘሎ ተንቀሳቓሲ ክረደንሻልካ (ONCHAINID) ከኣ ነቲ ፑል ይኸፍቶ. ፑላት ካብ መዝገብ ኣውጻእቲ ይርከቡ (ወይ ብኢድ ይጽሓፉ), ዝርዝራት ቶከን ኣብ ሰንሰለት ይንበቡ, ነፍሲ ወከፍ ስዋፕ ከኣ ተመኑ, ደረጃ ክፍሊቱን ዝተሓተ ትቕበሎን የርኢ. ስዋፓት ኣብቲ ተታሓሒዝካሉ ዘለኻ ሰንሰለት ይፍጸሙ. እቲ ናይ ፈተነ ፑል ኣብ Base Sepolia ናይ AUD ናሙና ስቴብልኮይን (AUDD) ምስ ናይ AUD ናሙና ብቶከን ዝተገብረ ናይ ገንዘብ ዕዳጋ ፈንድ (MMF) ይልውጥ.",
+          "statusLabel": "ስሪት Stable"
+        },
+        "vi": {
+          "summary": "Hoán đổi trong một pool Uniswap v4 yêu cầu chứng chỉ.",
+          "details": "Giao dịch hoán đổi bán lẻ trong một pool Uniswap v4 chỉ nhận người thật đã xác minh và không bị trừng phạt. Hãy chứng minh bạn là người thật một lần bằng chứng chỉ hộ chiếu, và chứng chỉ trên chuỗi khả chuyển của bạn (ONCHAINID) sẽ mở pool. Pool được tìm thấy từ sổ đăng ký bên phát hành (hoặc nhập thủ công), thông tin token được đọc trên chuỗi, và mỗi lần hoán đổi đều hiển thị tỷ giá, bậc phí và mức nhận tối thiểu. Hoán đổi được quyết toán trên chuỗi bạn đang kết nối. Pool thí điểm giao dịch một stablecoin AUD mô phỏng (AUDD) lấy một quỹ thị trường tiền tệ AUD được token hóa mô phỏng (MMF) trên Base Sepolia.",
+          "statusLabel": "Ổn định"
+        }
+      }
+    },
+    {
+      "id": "uniswap-v4",
+      "title": "UniswapV4",
+      "summary": "Swap in a credential-gated Uniswap v4 pool.",
+      "details": "A retail swap in a Uniswap v4 pool that only admits verified, non-sanctioned humans. Prove personhood with your passport credential once, and your portable on-chain credential (ONCHAINID) unlocks the pool. Pools are discovered from the issuer registry (or entered manually), token details are read on-chain, and each swap shows its rate, fee tier, and minimum received. Swaps settle on the chain you are connected to. The pilot pool trades a mock AUD stablecoin (AUDD) for a mock tokenized AUD money-market fund (MMF) on Base Sepolia.",
+      "iconName": "arrow.left.arrow.right.circle.fill",
+      "statusLabel": "Beta",
+      "curatedBy": "Elabify",
+      "version": "0.2.1",
+      "channel": "beta",
+      "requiresMaknoonVersion": "0.6.7",
+      "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/uniswap-v4/releases/0.2.1/manifest.json",
+      "manifestSha256": "38b91b631909947b878abdc18f3e21b7cbba7deb62b043e66578a6facd8d1236",
+      "permissions": [
+        "wallet.ethereum.read",
+        "wallet.ethereum.write",
+        "identity"
+      ],
+      "capabilities": [
+        {
+          "name": "wallet.ethereum.read",
+          "reason": "Read Ethereum chain state and discover credential-gated pools"
+        },
+        {
+          "name": "wallet.ethereum.write",
+          "reason": "Submit your approve and swap transactions (you approve each one)"
+        },
+        {
+          "name": "identity",
+          "reason": "Prove you are a verified, non-sanctioned human to access the pool"
+        }
+      ],
+      "i18n": {
+        "ar": {
+          "summary": "المبادلة في مجمع Uniswap v4 مقيَّد ببيانات الاعتماد.",
+          "details": "مبادلة تجزئة في مجمع Uniswap v4 لا يسمح إلا للأشخاص الموثقين وغير الخاضعين للعقوبات. أثبت مرة واحدة أنك شخص حقيقي باستخدام بيانات اعتماد جواز سفرك، فتفتح بيانات اعتمادك المحمولة على السلسلة (ONCHAINID) المجمع. تُكتشف المجمعات من سجل جهة الإصدار (أو تُدخل يدوياً)، وتُقرأ تفاصيل الرموز على السلسلة، وتعرض كل مبادلة سعرها وشريحة رسومها والحد الأدنى المستلم. تُسوّى المبادلات على السلسلة المتصل بها. يتداول المجمع التجريبي عملة مستقرة تجريبية بالدولار الأسترالي (AUDD) مقابل صندوق سوق نقد تجريبي مُرمَّز بالدولار الأسترالي (MMF) على Base Sepolia.",
+          "statusLabel": "مستقر"
+        },
+        "zh-Hans": {
+          "summary": "在凭证门控的 Uniswap v4 资金池中兑换。",
+          "details": "在仅允许经过验证且未受制裁的真人参与的 Uniswap v4 资金池中进行零售兑换。用您的护照凭证证明一次真人身份，您的可携带链上凭证 (ONCHAINID) 便会解锁资金池。资金池从发行方注册表中发现（也可手动输入），代币详情从链上读取，每笔兑换都会显示其汇率、费率档和最少收到数量。兑换在您所连接的链上结算。试点资金池在 Base Sepolia 上以模拟 AUD 稳定币 (AUDD) 兑换模拟代币化 AUD 货币市场基金 (MMF)。",
+          "statusLabel": "稳定版"
+        },
+        "zh-Hant": {
+          "summary": "在受憑證門檻限制的 Uniswap v4 資金池中兌換。",
+          "details": "在僅允許已驗證且未受制裁的真人加入的 Uniswap v4 資金池中進行零售兌換。以您的護照憑證證明一次真人身分，您可攜的鏈上憑證（ONCHAINID）就會解鎖此資金池。資金池會從簽發方註冊表搜尋取得（也可手動輸入），代幣詳細資料會在鏈上讀取，每筆兌換都會顯示其匯率、費率級距和最少收到金額。兌換會在您所連線的鏈上結算。試辦資金池在 Base Sepolia 上以模擬的 AUD 穩定幣（AUDD）兌換模擬的代幣化 AUD 貨幣市場基金（MMF）。",
+          "statusLabel": "穩定版"
+        },
+        "es": {
+          "summary": "Intercambiar en un pool de Uniswap v4 restringido por credencial.",
+          "details": "Un intercambio minorista en un pool de Uniswap v4 que solo admite personas verificadas y sin sanciones. Demuestra una sola vez con tu credencial de pasaporte que eres una persona, y tu credencial portátil en la cadena (ONCHAINID) desbloquea el pool. Los pools se descubren desde el registro del emisor (o se introducen a mano), los detalles del token se leen en la cadena y cada intercambio muestra su tasa, su nivel de comisión y el mínimo recibido. Los intercambios se liquidan en la cadena a la que estés conectado. El pool piloto intercambia una stablecoin de AUD de prueba (AUDD) por un fondo del mercado monetario en AUD tokenizado y de prueba (MMF) en Base Sepolia.",
+          "statusLabel": "Estable"
+        },
+        "hi": {
+          "summary": "क्रेडेंशियल-गेटेड Uniswap v4 पूल में स्वैप करें।",
+          "details": "एक Uniswap v4 पूल में रिटेल स्वैप, जो केवल सत्यापित, गैर-प्रतिबंधित इंसानों को ही प्रवेश देता है। अपने पासपोर्ट क्रेडेंशियल से एक बार साबित करें कि आप इंसान हैं, और आपका पोर्टेबल ऑन-चेन क्रेडेंशियल (ONCHAINID) पूल को अनलॉक कर देता है। पूल जारीकर्ता रजिस्ट्री से मिलते हैं (या मैन्युअल रूप से दर्ज किए जाते हैं), टोकन का विवरण ऑन-चेन पढ़ा जाता है, और हर स्वैप उसकी दर, शुल्क स्तर और न्यूनतम प्राप्ति दिखाता है। स्वैप उसी चेन पर निपटते हैं जिससे आप कनेक्ट हैं। पायलट पूल Base Sepolia पर एक मॉक AUD स्टेबलकॉइन (AUDD) को एक मॉक टोकनाइज़्ड AUD मनी-मार्केट फ़ंड (MMF) से बदलता है।"
+        },
+        "fil": {
+          "summary": "Mag-swap sa isang credential-gated na Uniswap v4 pool.",
+          "details": "Isang retail na swap sa isang Uniswap v4 pool na tanging na-verify at walang sanction na tao lang ang pinapapasok. Patunayan nang minsan gamit ang kredensyal ng pasaporte mo na tao ka, at ang portable, on-chain na kredensyal mo (ONCHAINID) ang magbubukas ng pool. Nahahanap ang mga pool mula sa rehistro ng issuer (o mailalagay nang manual), binabasa on-chain ang detalye ng token, at ipinapakita ng bawat swap ang rate, antas ng bayarin, at min na matatanggap nito. Nagse-settle ang mga swap sa chain na nakakonekta ka. Ipinagpapalit ng pilot pool ang isang mock na AUD stablecoin (AUDD) para sa isang mock na tokenized na AUD money-market fund (MMF) sa Base Sepolia.",
+          "statusLabel": "Stable"
+        },
+        "pt": {
+          "summary": "Trocar numa pool Uniswap v4 que exige credencial.",
+          "details": "Uma troca de retalho numa pool Uniswap v4 que admite apenas pessoas verificadas e sem sanções. Prove uma vez com a credencial do seu passaporte que é uma pessoa, e a sua credencial on-chain portátil (ONCHAINID) desbloqueia a pool. As pools são descobertas a partir do registo do emissor (ou introduzidas manualmente), os detalhes dos tokens são lidos on-chain e cada troca mostra o câmbio, o nível de taxa e o mínimo recebido. As trocas são liquidadas na cadeia a que está ligado. A pool piloto troca uma stablecoin AUD fictícia (AUDD) por um fundo do mercado monetário AUD tokenizado fictício (MMF) em Base Sepolia.",
+          "statusLabel": "Estável"
+        },
+        "ja": {
+          "summary": "クレデンシャルで制限されたUniswap v4プールでスワップします。",
+          "details": "検証済みで制裁リストに該当しない人間のみが参加できるUniswap v4プールでの個人向けスワップです。パスポートのクレデンシャルで一度だけ人間であることを証明すると、ポータブルなオンチェーンクレデンシャル (ONCHAINID) がプールのロックを解除します。プールは発行者レジストリから検出されます（手動で入力することもできます）。トークンの詳細はオンチェーンで読み取られ、スワップごとにレート、手数料ティア、最小受取額が表示されます。スワップは接続中のチェーン上で決済されます。パイロットプールは、Base Sepolia上でモックのAUDステーブルコイン (AUDD) と、モックのトークン化AUDマネー・マーケット・ファンド (MMF) を取引します。",
+          "statusLabel": "安定版"
+        },
+        "ru": {
+          "summary": "Совершайте обмен в пуле Uniswap v4 с доступом по удостоверению.",
+          "details": "Розничный обмен в пуле Uniswap v4, куда допускаются только проверенные люди без санкций. Один раз подтвердите паспортным удостоверением, что вы человек, и ваше переносимое удостоверение в блокчейне (ONCHAINID) откроет пул. Пулы находятся по реестру эмитентов (или вводятся вручную), данные токенов читаются в блокчейне, а по каждому обмену показываются курс, уровень комиссии и минимум к получению. Обмены исполняются в блокчейне, к которому вы подключены. В пилотном пуле обменивается имитация стейблкоина AUD (AUDD) на имитацию токенизированного фонда денежного рынка в AUD (MMF) в Base Sepolia.",
+          "statusLabel": "Стабильный"
+        },
+        "ur": {
+          "summary": "سند سے محدود Uniswap v4 پول میں تبادلہ کریں۔",
+          "details": "Uniswap v4 پول میں ایک ریٹیل تبادلہ جو صرف تصدیق شدہ، پابندیوں سے پاک انسانوں کو داخلہ دیتا ہے۔ اپنی پاسپورٹ سند سے ایک بار ثابت کریں کہ آپ انسان ہیں، اور آپ کی قابل منتقلی آن چین سند (ONCHAINID) پول کو ان لاک کر دیتی ہے۔ پول جاری کنندہ کی رجسٹری سے دریافت ہوتے ہیں (یا دستی طور پر درج کیے جاتے ہیں)، ٹوکن کی تفصیلات آن چین پڑھی جاتی ہیں، اور ہر تبادلہ اپنی شرح تبادلہ، فیس کا درجہ اور کم سے کم موصول رقم دکھاتا ہے۔ تبادلے اس چین پر طے پاتے ہیں جس سے آپ منسلک ہیں۔ آزمائشی پول Base Sepolia پر ایک فرضی آسٹریلوی ڈالر اسٹیبل کوائن (AUDD) کا ایک فرضی ٹوکنائزڈ آسٹریلوی ڈالر منی مارکیٹ فنڈ (MMF) سے تبادلہ کرتا ہے۔",
+          "statusLabel": "مستحکم"
+        },
+        "fr": {
+          "summary": "Échanger dans un pool Uniswap v4 conditionné à une attestation.",
+          "details": "Un échange de détail dans un pool Uniswap v4 qui n'admet que des humains vérifiés et non sanctionnés. Prouvez une seule fois avec votre attestation de passeport que vous êtes un humain, et votre attestation on-chain portable (ONCHAINID) déverrouille le pool. Les pools sont découverts depuis le registre de l'émetteur (ou saisis manuellement), les détails des jetons sont lus on-chain, et chaque échange affiche son taux, son palier de frais et le minimum reçu. Les échanges sont réglés sur la chaîne à laquelle vous êtes connecté. Le pool pilote échange un stablecoin AUD fictif (AUDD) contre un fonds monétaire AUD tokenisé fictif (MMF) sur Base Sepolia.",
+          "statusLabel": "Stable"
+        },
+        "de": {
+          "summary": "In einem nachweisgeschützten Uniswap v4-Pool swappen.",
+          "details": "Ein Retail-Swap in einem Uniswap v4-Pool, der nur verifizierte, nicht sanktionierte Menschen zulässt. Belege einmalig mit deinem Passnachweis, dass du ein Mensch bist, und dein portabler On-Chain-Nachweis (ONCHAINID) schaltet den Pool frei. Pools werden über das Register des Ausstellers gefunden (oder manuell eingegeben), Token-Details werden on-chain gelesen, und jeder Swap zeigt seinen Kurs, seine Gebührenstufe und den Mindestbetrag, den du erhältst. Swaps werden auf der Chain abgewickelt, mit der du verbunden bist. Der Pilot-Pool handelt einen fiktiven AUD-Stablecoin (AUDD) gegen einen fiktiven tokenisierten AUD-Geldmarktfonds (MMF) auf Base Sepolia.",
+          "statusLabel": "Stabil"
+        },
+        "ku": {
+          "summary": "Di Pooleke Uniswap v4 ya bi belgename ve sînorkirî de Swap bike.",
+          "details": "Swapek perakende di Pooleke Uniswap v4 de ku tenê mirovên piştrastkirî yên ne di lîsteya cezayan de dipejirîne. Carekê bi belgenameya pasaporta xwe îsbat bike ku tu mirov î, û belgenameya te ya On-chain a guhêzbar (ONCHAINID) Poolê vedike. Pool ji qeydgeha derxistkeran tên dîtin (an bi destan tên nivîsîn), hûrguliyên tokenan On-chain tên xwendin, û her Swap kursa xwe, asta xercê û wergirtina herî kêm nîşan dide. Swap li ser chaina ku tu pê ve girêdayî yî tên temamkirin. Poola pîlot li ser Base Sepolia stablecoinek AUD a testê (AUDD) bi fondek bazara diravî ya AUD a tokenkirî ya testê (MMF) re Swap dike.",
+          "statusLabel": "Stabîl"
+        },
+        "ckb": {
+          "summary": "ئاڵوگۆڕ لە حەوزێکی Uniswap v4 دا کە بە بڕوانامە پارێزراوە.",
+          "details": "ئاڵوگۆڕێکی وردەفرۆشی لە حەوزێکی Uniswap v4 دا کە تەنها مرۆڤی پشتڕاستکراو و سزانەدراو قبووڵ دەکات. جارێک بە بڕوانامەی پاسپۆرتەکەت بسەلمێنە کە مرۆڤیت، و بڕوانامەی گواستراوەی لەسەر زنجیرەی تۆ (ONCHAINID) حەوزەکە دەکاتەوە. حەوزەکان لە تۆمارگەی دەرکەرەوە دەدۆزرێنەوە (یان بە دەست دەنووسرێن)، وردەکاریی تۆکنەکان لەسەر زنجیرە دەخوێنرێنەوە، و هەر ئاڵوگۆڕێک نرخ، پلەی کرێ و کەمترین وەرگیراوی خۆی پیشان دەدات. ئاڵوگۆڕەکان لەسەر ئەو زنجیرەیەی پێوەی پەیوەستیت جێبەجێ دەبن. حەوزی پایلۆت لەسەر Base Sepolia ستەیبڵکۆینێکی تاقیکاریی AUD (AUDD) بە سندوقێکی تاقیکاریی تۆکنکراوی بازاڕی پارەی AUD (MMF) ئاڵوگۆڕ دەکات.",
+          "statusLabel": "جێگیر"
+        },
+        "bn": {
+          "summary": "ক্রেডেনশিয়াল দিয়ে সীমিত একটি Uniswap v4 পুলে সোয়াপ করুন।",
+          "details": "একটি Uniswap v4 পুলে খুচরা সোয়াপ, যেখানে শুধু যাচাই হওয়া, নিষেধাজ্ঞাভুক্ত নয় এমন মানুষ প্রবেশ করতে পারে। আপনার পাসপোর্ট ক্রেডেনশিয়াল দিয়ে একবার প্রমাণ করুন যে আপনি একজন মানুষ, তাহলেই আপনার বহনযোগ্য অন-চেইন ক্রেডেনশিয়াল (ONCHAINID) পুলটি আনলক করে দেয়। পুল ইস্যুকারী রেজিস্ট্রি থেকে খুঁজে পাওয়া যায় (অথবা হাতে লেখা যায়), টোকেনের বিবরণ অন-চেইন থেকে পড়া হয়, এবং প্রতিটি সোয়াপে তার দর, ফি স্তর ও সর্বনিম্ন প্রাপ্তি দেখানো হয়। আপনি যে চেইনে সংযুক্ত, সোয়াপ সেই চেইনেই নিষ্পত্তি হয়। পাইলট পুলটি Base Sepolia-তে একটি মক AUD স্টেবলকয়েন (AUDD) ও একটি মক টোকেনাইজড AUD মানি-মার্কেট ফান্ড (MMF)-এর মধ্যে লেনদেন করে।",
+          "statusLabel": "স্টেবল"
+        },
+        "ml": {
+          "summary": "ക്രെഡൻഷ്യൽ-നിയന്ത്രിത Uniswap v4 പൂളിൽ സ്വാപ്പ് ചെയ്യുക.",
+          "details": "ഉറപ്പാക്കിയ, ഉപരോധ പട്ടികയിലില്ലാത്ത മനുഷ്യരെ മാത്രം അനുവദിക്കുന്ന ഒരു Uniswap v4 പൂളിലെ റീട്ടെയിൽ സ്വാപ്പ്. പാസ്പോർട്ട് ക്രെഡൻഷ്യൽ ഉപയോഗിച്ച് നിങ്ങൾ മനുഷ്യനാണെന്ന് ഒരിക്കൽ തെളിയിച്ചാൽ, നിങ്ങളുടെ പോർട്ടബിൾ ഓൺ-ചെയിൻ ക്രെഡൻഷ്യൽ (ONCHAINID) പൂൾ അൺലോക്ക് ചെയ്യും. പൂളുകൾ ഇഷ്യൂവർ രജിസ്ട്രിയിൽ നിന്ന് കണ്ടെത്തും (അല്ലെങ്കിൽ നേരിട്ട് നൽകാം), ടോക്കൺ വിവരങ്ങൾ ഓൺ-ചെയിൻ വായിക്കും, ഓരോ സ്വാപ്പും അതിന്റെ നിരക്ക്, ഫീസ് ടയർ, കുറഞ്ഞത് ലഭിക്കുന്നത് എന്നിവ കാണിക്കും. നിങ്ങൾ ബന്ധിപ്പിച്ചിരിക്കുന്ന ചെയിനിലാണ് സ്വാപ്പുകൾ തീർപ്പാക്കുന്നത്. പൈലറ്റ് പൂൾ Base Sepolia-യിൽ ഒരു മോക്ക് AUD സ്റ്റേബിൾകോയിനും (AUDD) ഒരു മോക്ക് ടോക്കണൈസ്ഡ് AUD മണി-മാർക്കറ്റ് ഫണ്ടും (MMF) തമ്മിൽ വ്യാപാരം ചെയ്യുന്നു.",
+          "statusLabel": "സ്റ്റേബിൾ"
+        },
+        "ta": {
+          "summary": "அத்தாட்சியால் கட்டுப்படுத்தப்பட்ட Uniswap v4 பூலில் பரிமாற்று.",
+          "details": "சரிபார்க்கப்பட்ட, தடைப்பட்டியலில் இல்லாத மனிதர்களை மட்டுமே அனுமதிக்கும் Uniswap v4 பூலில் ஒரு சில்லறைப் பரிமாற்றம். உங்கள் கடவுச்சீட்டு அத்தாட்சி மூலம் நீங்கள் மனிதர் என்பதை ஒருமுறை நிரூபித்தால், செயினில் உள்ள, கொண்டுசெல்லக்கூடிய உங்கள் அத்தாட்சி (ONCHAINID) பூலின் பூட்டைத் திறக்கும். பூல்கள் வழங்குநர் பதிவேட்டிலிருந்து கண்டறியப்படும் (அல்லது கைமுறையாக உள்ளிடலாம்), டோக்கன் விவரங்கள் செயினில் படிக்கப்படும், ஒவ்வொரு பரிமாற்றமும் அதன் மாற்று விகிதம், கட்டண நிலை, குறைந்தபட்சம் பெறுவது ஆகியவற்றைக் காட்டும். நீங்கள் இணைந்திருக்கும் செயினில் பரிமாற்றங்கள் தீர்க்கப்படும். சோதனைப் பூல், Base Sepolia இல் ஒரு போலி AUD ஸ்டேபிள்காயினுக்கும் (AUDD) ஒரு போலி டோக்கனாக்கப்பட்ட AUD பணச்சந்தை நிதிக்கும் (MMF) இடையே வர்த்தகம் செய்யும்.",
+          "statusLabel": "நிலையானது"
+        },
+        "he": {
+          "summary": "החלפה בבריכת Uniswap v4 המוגבלת לתעודה.",
+          "details": "החלפה קמעונאית בבריכת Uniswap v4 שמתירה כניסה רק לאנשים מאומתים שאינם תחת סנקציות. יש להוכיח פעם אחת באמצעות תעודת הדרכון שמדובר באדם, והתעודה הניידת שלך בשרשרת (ONCHAINID) פותחת את נעילת הבריכה. הבריכות מאותרות מתוך מרשם המנפיק (או מוזנות ידנית), פרטי הטוקנים נקראים בשרשרת, וכל החלפה מציגה את השער שלה, את דרגת העמלה ואת המינימום לקבלה. ההחלפות נסלקות בשרשרת שאליה התחברת. הבריכה הניסיונית מחליפה מטבע יציב מדומה בדולר אוסטרלי (AUDD) בקרן כספית מדומה בדולר אוסטרלי בצורת טוקן (MMF) ב-Base Sepolia.",
+          "statusLabel": "יציב"
+        },
+        "fa": {
+          "summary": "مبادله در استخر Uniswap v4 محدودشده با گواهی.",
+          "details": "یک مبادله خرد در استخر Uniswap v4 که فقط انسان‌های معتبر و غیرتحریمی را می‌پذیرد. یک بار با گواهی گذرنامه خود ثابت کنید که انسان هستید، و گواهی قابل حمل شما روی زنجیره (ONCHAINID) استخر را باز می‌کند. استخرها از رجیستری صادرکننده کشف می‌شوند (یا دستی وارد می‌شوند)، جزئیات توکن روی زنجیره خوانده می‌شود، و هر مبادله نرخ، رده کارمزد و حداقل دریافتی خود را نشان می‌دهد. مبادله‌ها روی زنجیره‌ای که به آن وصل هستید تسویه می‌شوند. استخر آزمایشی یک استیبل‌کوین ساختگی دلار استرالیا (AUDD) را با یک صندوق بازار پول توکنی‌شده ساختگی دلار استرالیا (MMF) روی Base Sepolia مبادله می‌کند.",
+          "statusLabel": "پایدار"
+        },
+        "ko": {
+          "summary": "자격증명으로 제한된 Uniswap v4 풀에서 스왑합니다.",
+          "details": "검증되고 제재 대상이 아닌 사람만 허용하는 Uniswap v4 풀에서의 소매 스왑입니다. 여권 자격증명으로 사람임을 한 번 증명하면, 이동 가능한 온체인 자격증명 (ONCHAINID)로 풀이 열립니다. 풀은 발급자 레지스트리에서 검색하거나 직접 입력할 수 있으며, 토큰 정보는 온체인에서 읽어 오고, 스왑마다 환율, 수수료 등급, 최소 수령량을 표시합니다. 스왑은 연결된 체인에서 정산됩니다. 파일럿 풀은 Base Sepolia에서 모의 AUD 스테이블코인 (AUDD)를 모의 토큰화 AUD 머니마켓펀드 (MMF)로 교환합니다.",
+          "statusLabel": "정식"
+        },
+        "it": {
+          "summary": "Scambia in un pool Uniswap v4 protetto da credenziale.",
+          "details": "Uno scambio al dettaglio in un pool Uniswap v4 che ammette solo persone verificate e non sanzionate. Dimostra una sola volta con la credenziale del passaporto di essere una persona, e la tua credenziale on-chain portatile (ONCHAINID) sblocca il pool. I pool vengono individuati dal registro dell'emittente (o inseriti manualmente), i dettagli dei token vengono letti on-chain e ogni scambio mostra il tasso, la fascia di commissione e il minimo ricevuto. Gli scambi vengono regolati sulla chain a cui sei connesso. Il pool pilota scambia una stablecoin AUD fittizia (AUDD) con un fondo monetario AUD tokenizzato fittizio (MMF) su Base Sepolia.",
+          "statusLabel": "Stabile"
+        },
+        "nl": {
+          "summary": "Swappen in een Uniswap v4-pool die een bewijs vereist.",
+          "details": "Een retailswap in een Uniswap v4-pool die alleen geverifieerde, niet-gesanctioneerde mensen toelaat. Toon eenmalig met je paspoortbewijs dat je een mens bent, en je portable on-chain bewijs (ONCHAINID) ontgrendelt de pool. Pools worden gevonden via het register van de uitgever (of handmatig ingevoerd), tokendetails worden on-chain gelezen en elke swap toont de koers, het kostenniveau en het minimaal ontvangen bedrag. Swaps worden afgewikkeld op de chain waarmee je verbonden bent. De pilotpool verhandelt een fictieve AUD-stablecoin (AUDD) tegen een fictief getokeniseerd AUD-geldmarktfonds (MMF) op Base Sepolia.",
+          "statusLabel": "Stabiel"
+        },
+        "tr": {
+          "summary": "Kimlik bilgisi ile kısıtlı bir Uniswap v4 havuzunda takas yapın.",
+          "details": "Yalnızca doğrulanmış, yaptırımsız kişileri kabul eden bir Uniswap v4 havuzunda perakende takas. Pasaport kimlik bilginizle bir kez kişi olduğunuzu kanıtlayın; taşınabilir zincir üstü kimlik bilginiz (ONCHAINID) havuzun kilidini açar. Havuzlar verenler kayıt defterinden bulunur (veya elle girilir), token ayrıntıları zincir üstünde okunur ve her takas kendi kurunu, ücret kademesini ve minimum alınan tutarı gösterir. Takaslar bağlı olduğunuz zincirde gerçekleşir. Pilot havuz, Base Sepolia üzerinde test amaçlı bir AUD stablecoin'i (AUDD) ile test amaçlı, tokenleştirilmiş bir AUD para piyasası fonunu (MMF) takas eder.",
+          "statusLabel": "Kararlı"
+        },
+        "sw": {
+          "summary": "Fanya swap katika pool ya Uniswap v4 inayohitaji hati.",
+          "details": "Swap ya reja reja katika pool ya Uniswap v4 inayoruhusu tu watu waliohakikiwa, wasio na vikwazo. Thibitisha mara moja kwa hati yako ya pasipoti kuwa wewe ni mtu, na hati yako inayohamishika ya on-chain (ONCHAINID) hufungua pool. Pool hupatikana kutoka rejista ya watoaji (au huandikwa kwa mkono), maelezo ya token husomwa on-chain, na kila swap huonyesha kiwango chake, daraja la ada, na kiasi cha chini. Swap hukamilika kwenye chain uliyoungana nayo. Pool ya majaribio inabadilisha stablecoin ya mfano ya AUD (AUDD) na mfuko wa mfano wa soko la fedha wa AUD uliogeuzwa kuwa token (MMF) kwenye Base Sepolia.",
+          "statusLabel": "Thabiti"
+        },
+        "aa": {
+          "summary": "Sumaq luk kuflimeh Uniswap v4 Poolil wal-korsis.",
+          "details": "Cakkumsimeh, qukuubat mali sinam dibuk culusa Uniswap v4 Poolil yan dago muqaamala wal-korsis. Inki adda ku baasboor sumaq luk seehadaytu kinnitom cujjat hay, ku gexsimta Chainil sumaq (ONCHAINID) Pool kufli faka. Poolitte musdirih Kutbiisok geytiman (hinnay gabah kutbiman), Token baxxaqqa Chainil akriyimta, kulli wal-korsis isi siqir, ujra daraja, kee dago beyo ubullusa. Wal-korsisitte atu xagsimteh tan Chain amol duudusiman. Tijriibat Pool Base Sepolia amol AUD tijriibat stablecoin (AUDD) kee AUD tijriibat token luk yan maalu-suuk sanduuk (MMF) wal-korsisa.",
+          "statusLabel": "Stable"
+        },
+        "am": {
+          "summary": "በክሬደንሻል በተከለለ የUniswap v4 ፑል ውስጥ ይመንዝሩ።",
+          "details": "የተረጋገጡ፣ ማዕቀብ ያልተጣለባቸው ሰዎችን ብቻ በሚቀበል የUniswap v4 ፑል ውስጥ የችርቻሮ ምንዛሪ። በፓስፖርት ክሬደንሻልዎ ሰው መሆንዎን አንድ ጊዜ ያረጋግጡ፤ ተንቀሳቃሽ በቼይን ላይ ክሬደንሻልዎ (ONCHAINID) ፑሉን ይከፍታል። ፑሎች ከአውጪዎች መዝገብ ይገኛሉ (ወይም በእጅ ይገባሉ)፣ የቶከን ዝርዝሮች ከቼይኑ ይነበባሉ፣ እና እያንዳንዱ ምንዛሪ ተመኑን፣ የኮሚሽን እርከኑንና ዝቅተኛ የሚቀበሉትን ያሳያል። ምንዛሪዎቹ እርስዎ በተገናኙበት ቼይን ላይ ይፈጸማሉ። የሙከራ ፑሉ በBase Sepolia ላይ የAUD ናሙና ስቴብልኮይን (AUDD) ከናሙና በቶከን የተደረገ የAUD የገንዘብ ገበያ ፈንድ (MMF) ጋር ይመነዝራል።",
+          "statusLabel": "ቋሚ"
+        },
+        "om": {
+          "summary": "Pool Uniswap v4 waabii gaafatu keessatti jijjiiri.",
+          "details": "Pool Uniswap v4 namoota mirkanaa'anii fi hin adabamne qofa fudhatu keessatti jijjiirraa daldala xiqqaa. Waabii paaspoortii keetiin nama ta'uu kee al tokko ragaa ba'i, waabiin kee chain irratti kan baadhatamu (ONCHAINID) pool siif fura. Poolonni galmee kennituu irraa argamu (yookaan harkaan galchamu), bal'inni token chain irratti dubbifama, jijjiirraan hundi gatii jijjiirraa isaa, sadarkaa qaraxaa fi gadaanaa fudhatamu ni agarsiisa. Jijjiirraan chain ati itti hidhamte irratti raawwatama. Pooliin yaalii Base Sepolia irratti stablecoin AUD fakkeenyaa (AUDD) fandii gabaa maallaqaa AUD tokeneffame fakkeenyaa (MMF) waliin jijjiira.",
+          "statusLabel": "Tasgabbaa'aa"
+        },
+        "so": {
+          "summary": "Ku sarrif Pool Uniswap v4 oo shahaado ku xiran.",
+          "details": "Sarrif tafaariiq ah oo ka dhacaya Pool Uniswap v4 oo kaliya oggolaanaya dad la xaqiijiyay oo aan cunaqabatayn saarnayn. Hal mar ku caddee shahaadada baasaboorkaaga inaad qof tahay, shahaadadaada silsilada ku jirta ee la qaadan karo (ONCHAINID) ayaana Pool-ka furaya. Pool-asha waxaa laga helaa diiwaanka soo saarayaasha (ama gacanta ayaa lagu galiyaa), faahfaahinta Token-ka silsilada ayaa laga akhriyaa, sarrif kastana wuxuu muujiyaa sicirkiisa, darajada khidmadda, iyo ugu yaraan la helayo. Sarrifyadu waxay ku dhamaystirmaan silsilada aad ku xiran tahay. Pool-ka tijaabada ah wuxuu Base Sepolia ku sarrifaa stablecoin AUD tusaale ah (AUDD) iyo sanduuq suuqa lacagta AUD oo token laga dhigay oo tusaale ah (MMF).",
+          "statusLabel": "Xasilloon"
+        },
+        "ti": {
+          "summary": "ኣብ ብክረደንሻል ዝዕጾ ናይ Uniswap v4 ፑል ስዋፕ ግበር.",
+          "details": "ዝተረጋገጹ, ኣብ ማዕቀብ ዘየለዉ ሰባት ጥራይ ኣብ ዘፍቅድ ናይ Uniswap v4 ፑል ዝግበር ናይ ችርቻሮ ስዋፕ. ብክረደንሻል ፓስፖርትካ ሰብ ምዃንካ ሓንሳብ ኣረጋግጽ, እቲ ኣብ ሰንሰለት ዘሎ ተንቀሳቓሲ ክረደንሻልካ (ONCHAINID) ከኣ ነቲ ፑል ይኸፍቶ. ፑላት ካብ መዝገብ ኣውጻእቲ ይርከቡ (ወይ ብኢድ ይጽሓፉ), ዝርዝራት ቶከን ኣብ ሰንሰለት ይንበቡ, ነፍሲ ወከፍ ስዋፕ ከኣ ተመኑ, ደረጃ ክፍሊቱን ዝተሓተ ትቕበሎን የርኢ. ስዋፓት ኣብቲ ተታሓሒዝካሉ ዘለኻ ሰንሰለት ይፍጸሙ. እቲ ናይ ፈተነ ፑል ኣብ Base Sepolia ናይ AUD ናሙና ስቴብልኮይን (AUDD) ምስ ናይ AUD ናሙና ብቶከን ዝተገብረ ናይ ገንዘብ ዕዳጋ ፈንድ (MMF) ይልውጥ.",
+          "statusLabel": "ስሪት Stable"
+        },
+        "vi": {
+          "summary": "Hoán đổi trong một pool Uniswap v4 yêu cầu chứng chỉ.",
+          "details": "Giao dịch hoán đổi bán lẻ trong một pool Uniswap v4 chỉ nhận người thật đã xác minh và không bị trừng phạt. Hãy chứng minh bạn là người thật một lần bằng chứng chỉ hộ chiếu, và chứng chỉ trên chuỗi khả chuyển của bạn (ONCHAINID) sẽ mở pool. Pool được tìm thấy từ sổ đăng ký bên phát hành (hoặc nhập thủ công), thông tin token được đọc trên chuỗi, và mỗi lần hoán đổi đều hiển thị tỷ giá, bậc phí và mức nhận tối thiểu. Hoán đổi được quyết toán trên chuỗi bạn đang kết nối. Pool thí điểm giao dịch một stablecoin AUD mô phỏng (AUDD) lấy một quỹ thị trường tiền tệ AUD được token hóa mô phỏng (MMF) trên Base Sepolia.",
+          "statusLabel": "Ổn định"
+        }
+      }
     }
   ]
 }
