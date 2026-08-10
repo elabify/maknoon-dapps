@@ -72,24 +72,19 @@ const APP_META = {
     entry: "index.html",
     channels: [
       {
-        // FROZEN: the bundle already serving stable users. Its snapshot is
-        // committed under releases/0.1.6 and is not rebuilt, so shipping a beta
-        // cannot disturb it. Promote by adding a new stable channel entry.
-        channel: "stable", version: "0.1.6", frozen: true,
+        // PROMOTED from beta. 0.1.8's snapshot is already published and
+        // verified, so promotion moves the catalog pointer and nothing else:
+        // the bytes stable serves from today are the exact bytes beta was
+        // tested on. releases/0.1.6 stays on disk as the rollback target.
+        channel: "stable", version: "0.1.8", frozen: true,
         requiresMaknoon: "0.7.0",
         capabilities: [
           { name: "identity", reason: "Verify each customer has a sanctions screening with no match" },
           { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
         ],
       },
-      {
-        channel: "beta", version: "0.1.8",
-        requiresMaknoon: "0.7.0",
-        capabilities: [
-          { name: "identity", reason: "Verify each customer has a sanctions screening with no match" },
-          { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
-        ],
-      },
+      // No beta channel until there is a NEXT version. Pointing both channels at
+      // one version is what coupled them before.
     ],
   },
   "uniswap-v4": {
@@ -97,17 +92,8 @@ const APP_META = {
     entry: "index.html",
     channels: [
       {
-        // FROZEN, as above: releases/0.2.0 is what stable serves today.
-        channel: "stable", version: "0.2.0", frozen: true,
-        requiresMaknoon: "0.6.7",
-        capabilities: [
-          { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and discover credential-gated pools" },
-          { name: "wallet.ethereum.write", reason: "Submit your approve and swap transactions (you approve each one)" },
-          { name: "identity", reason: "Prove you are a verified, non-sanctioned human to access the pool" },
-        ],
-      },
-      {
-        channel: "beta", version: "0.2.1",
+        // PROMOTED from beta, same reasoning. releases/0.2.0 is the rollback.
+        channel: "stable", version: "0.2.1", frozen: true,
         requiresMaknoon: "0.6.7",
         capabilities: [
           { name: "wallet.ethereum.read", reason: "Read Ethereum chain state and discover credential-gated pools" },
