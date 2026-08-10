@@ -34,118 +34,143 @@
       ],
       "i18n": {
         "ar": {
+          "title": "نقطة البيع",
           "summary": "التحقق من العميل وقبول المدفوعات.",
           "details": "طرفية نقاط بيع للتاجر. أدخل مبلغاً بالعملة المشفّرة أو ما يعادله بالعملة الورقية، وحدد بيانات اعتماد العميل المطلوبة. يدفع العملاء إلى محفظتك على الشبكة التي تختارها، ويرسلون في الوقت نفسه بيانات الاعتماد المطلوبة للتحقق.",
           "statusLabel": "مستقر"
         },
         "zh-Hans": {
+          "title": "销售终端",
           "summary": "验证客户并接受付款。",
           "details": "商户销售点终端。输入加密货币金额或等值法币金额，并选择需要客户提供哪些凭证。客户在您选择的网络上向您的钱包付款，同时发送所需凭证以供验证。",
           "statusLabel": "稳定版"
         },
         "zh-Hant": {
+          "title": "銷售終端",
           "summary": "驗證顧客並接受付款。",
           "details": "商家銷售點終端機。輸入加密貨幣金額或等值法幣金額，並選取需要顧客提供哪些憑證。顧客會在您選擇的網路上向您的錢包付款，同時傳送所需的憑證以供驗證。",
           "statusLabel": "穩定版"
         },
         "es": {
+          "title": "Punto de venta",
           "summary": "Verificar a un cliente y aceptar pagos.",
           "details": "Un terminal de punto de venta para comercios. Introduce un importe en criptomoneda o su equivalente en moneda fiat y selecciona qué credenciales del cliente son necesarias. Los clientes pagan a tu cartera en la red que elijas y, al mismo tiempo, envían las credenciales requeridas para su verificación.",
           "statusLabel": "Estable"
         },
         "hi": {
+          "title": "बिक्री केंद्र",
           "summary": "ग्राहक सत्यापित करें और भुगतान स्वीकार करें।",
-          "details": "व्यापारी के लिए पॉइंट-ऑफ़-सेल टर्मिनल। क्रिप्टोकरेंसी में या उसके बराबर फ़िएट मुद्रा में राशि दर्ज करें और चुनें कि ग्राहक के कौन से क्रेडेंशियल अनिवार्य हैं। ग्राहक आपके चुने हुए नेटवर्क पर आपके वॉलेट में भुगतान करते हैं, और साथ ही सत्यापन के लिए आवश्यक क्रेडेंशियल भेजते हैं।"
+          "details": "व्यापारी के लिए पॉइंट-ऑफ़-सेल टर्मिनल। क्रिप्टोकरेंसी में या उसके बराबर फ़िएट मुद्रा में राशि दर्ज करें और चुनें कि ग्राहक के कौन से क्रेडेंशियल अनिवार्य हैं। ग्राहक आपके चुने हुए नेटवर्क पर आपके वॉलेट में भुगतान करते हैं, और साथ ही सत्यापन के लिए आवश्यक क्रेडेंशियल भेजते हैं।",
+          "statusLabel": "स्थिर"
         },
         "fil": {
+          "title": "Puntong Bentahan",
           "summary": "I-verify ang customer at tumanggap ng pagbabayad.",
           "details": "Isang point-of-sale terminal para sa merchant. Ilagay ang halaga sa cryptocurrency o katumbas na fiat na salapi, at piliin kung anong mga kredensyal ng customer ang kailangan. Nagbabayad ang mga customer papunta sa wallet mo sa network na pipiliin mo, at sabay nilang ipinapadala ang mga kinakailangang kredensyal para sa pag-verify."
         },
         "pt": {
+          "title": "Ponto de venda",
           "summary": "Verificar um cliente e aceitar pagamentos.",
           "details": "Um terminal de ponto de venda para comerciantes. Introduza um valor em criptomoeda ou o equivalente em moeda fiat e selecione quais as credenciais do cliente que são exigidas. Os clientes pagam para a sua carteira na rede que escolher e, ao mesmo tempo, enviam as credenciais exigidas para verificação.",
           "statusLabel": "Estável"
         },
         "ja": {
+          "title": "販売端末",
           "summary": "顧客を検証して支払いを受け取ります。",
           "details": "店舗向けのPOS端末です。暗号資産または同等の法定通貨で金額を入力し、顧客に求めるクレデンシャルを選択します。顧客は、選択したネットワーク上でウォレットに支払い、あわせて検証に必要なクレデンシャルを送信します。",
           "statusLabel": "安定版"
         },
         "ru": {
+          "title": "Точка продаж",
           "summary": "Проверяйте клиента и принимайте платежи.",
           "details": "Кассовый терминал продавца. Укажите сумму в криптовалюте или эквивалент в фиатной валюте и выберите, какие удостоверения клиента требуются. Клиенты платят на ваш кошелёк в выбранной вами сети и одновременно отправляют нужные удостоверения для проверки.",
           "statusLabel": "Стабильный"
         },
         "ur": {
+          "title": "مقامِ فروخت",
           "summary": "گاہک کی تصدیق کریں اور ادائیگیاں قبول کریں۔",
           "details": "تاجر کے لیے پوائنٹ آف سیل ٹرمینل۔ کرپٹو کرنسی میں یا اس کے مساوی فیاٹ کرنسی میں رقم درج کریں اور منتخب کریں کہ گاہک کی کون سی اسناد درکار ہیں۔ گاہک آپ کے منتخب کردہ نیٹ ورک پر آپ کے والٹ میں ادائیگی کرتے ہیں اور ساتھ ہی تصدیق کے لیے مطلوبہ اسناد بھیجتے ہیں۔",
           "statusLabel": "مستحکم"
         },
         "fr": {
+          "title": "Point de vente",
           "summary": "Vérifier un client et accepter des paiements.",
           "details": "Un terminal de point de vente pour marchands. Saisissez un montant en cryptomonnaie ou son équivalent en devise, puis choisissez quelles attestations du client sont requises. Les clients paient vers votre portefeuille sur le réseau que vous choisissez et envoient en même temps les attestations requises pour vérification."
         },
         "de": {
+          "title": "Kasse",
           "summary": "Einen Kunden prüfen und Zahlungen annehmen.",
           "details": "Ein Kassenterminal für Händler. Gib einen Betrag in Kryptowährung oder den entsprechenden Betrag in Fiat-Währung ein und wähle, welche Nachweise des Kunden erforderlich sind. Kunden zahlen auf dem von dir gewählten Netzwerk an deine Wallet und senden gleichzeitig die erforderlichen Nachweise zur Prüfung.",
           "statusLabel": "Stabil"
         },
         "ku": {
+          "title": "Xala Firotinê",
           "summary": "Xerîdar piştrast bike û dayînan bistîne.",
           "details": "Termînaleke xala firotanê ya firoşkar. Mîqdarekê bi kriptopere an bi diravê fiat ê hevber binivîse û hilbijêre kîjan belgenameyên xerîdar pêwîst in. Xerîdar li ser tora ku tu hilbijêrî dayînê didin cizdanê te û di heman demê de belgenameyên pêwîst ji bo piştrastkirinê dişînin.",
           "statusLabel": "Stabîl"
         },
         "ckb": {
+          "title": "خاڵی فرۆشتن",
           "summary": "کڕیار پشتڕاست بکە و پارەدان وەربگرە.",
           "details": "تێرمیناڵێکی خاڵی فرۆشتن بۆ بازرگان. بڕێک بە دراوی کریپتۆیی یان بە هاوتای دراوی فەرمی بنووسە و هەڵبژێرە کام بڕوانامەی کڕیار پێویستە. کڕیارەکان لەسەر ئەو تۆڕەی تۆ هەڵیدەبژێریت پارە دەدەن بۆ جزدانەکەت و لە هەمان کاتدا بڕوانامە پێویستەکان بۆ پشتڕاستکردنەوە دەنێرن.",
           "statusLabel": "جێگیر"
         },
         "bn": {
+          "title": "বিক্রয়কেন্দ্র",
           "summary": "গ্রাহক যাচাই করুন এবং পেমেন্ট গ্রহণ করুন।",
           "details": "বিক্রেতার জন্য একটি পয়েন্ট-অফ-সেল টার্মিনাল। ক্রিপ্টোকারেন্সিতে বা সমমূল্যের ফিয়াট মুদ্রায় একটি পরিমাণ লিখুন এবং গ্রাহকের কোন কোন ক্রেডেনশিয়াল লাগবে তা বেছে নিন। গ্রাহকেরা আপনার বেছে নেওয়া নেটওয়ার্কে আপনার ওয়ালেটে পরিশোধ করেন, এবং সেই সঙ্গেই যাচাইয়ের জন্য প্রয়োজনীয় ক্রেডেনশিয়াল পাঠান।",
           "statusLabel": "স্টেবল"
         },
         "ml": {
+          "title": "വിൽപ്പന കേന്ദ്രം",
           "summary": "ഉപഭോക്താവിനെ ഉറപ്പാക്കി പേയ്മെന്റുകൾ സ്വീകരിക്കുക.",
           "details": "വ്യാപാരികൾക്കുള്ള ഒരു പോയിന്റ്-ഓഫ്-സെയിൽ ടെർമിനൽ. ക്രിപ്റ്റോകറൻസിയിലോ തത്തുല്യമായ ഫിയറ്റ് കറൻസിയിലോ ഒരു തുക നൽകുക, ഉപഭോക്താവിന്റെ ഏതൊക്കെ ക്രെഡൻഷ്യലുകൾ വേണമെന്ന് തിരഞ്ഞെടുക്കുക. നിങ്ങൾ തിരഞ്ഞെടുക്കുന്ന നെറ്റ്വർക്കിൽ ഉപഭോക്താക്കൾ നിങ്ങളുടെ വാലറ്റിലേക്ക് പണമടയ്ക്കും, ഒപ്പം തന്നെ ഉറപ്പാക്കാൻ വേണ്ട ക്രെഡൻഷ്യലുകളും അയയ്ക്കും.",
           "statusLabel": "സ്റ്റേബിൾ"
         },
         "ta": {
+          "title": "விற்பனை மையம்",
           "summary": "வாடிக்கையாளரைச் சரிபார்த்துப் பணம் பெறு.",
           "details": "வணிகருக்கான ஒரு விற்பனைப் புள்ளி முனையம். கிரிப்டோகரன்சியிலோ அதற்கு நிகரான ஃபியட் நாணயத்திலோ ஒரு தொகையை உள்ளிட்டு, வாடிக்கையாளரிடமிருந்து எந்த அத்தாட்சிகள் தேவை என்பதைத் தேர்வுசெய். நீங்கள் தேர்வுசெய்த நெட்வொர்க்கில் வாடிக்கையாளர்கள் உங்கள் பணப்பைக்குப் பணம் செலுத்துவார்கள், அதே நேரத்தில் சரிபார்ப்புக்குத் தேவையான அத்தாட்சிகளையும் அனுப்புவார்கள்.",
           "statusLabel": "நிலையானது"
         },
         "he": {
+          "title": "נקודת מכירה",
           "summary": "אימות לקוח וקבלת תשלומים.",
           "details": "מסוף נקודת מכירה לבית עסק. יש להזין סכום במטבע קריפטוגרפי או בערך המקביל במטבע פיאט, ולבחור אילו תעודות של הלקוח נדרשות. הלקוחות משלמים לארנק שלך ברשת שבחרת, ובמקביל שולחים את התעודות הנדרשות לאימות.",
           "statusLabel": "יציב"
         },
         "fa": {
+          "title": "نقطه فروش",
           "summary": "راستی‌آزمایی مشتری و پذیرش پرداخت‌ها.",
           "details": "یک پایانه فروش برای فروشنده. مقداری به رمزارز یا معادل آن به ارز فیات وارد کنید و انتخاب کنید کدام گواهی‌های مشتری لازم است. مشتریان روی شبکه‌ای که انتخاب می‌کنید به کیف پول شما پرداخت می‌کنند و هم‌زمان گواهی‌های لازم را برای راستی‌آزمایی می‌فرستند.",
           "statusLabel": "پایدار"
         },
         "ko": {
+          "title": "판매 단말기",
           "summary": "고객을 검증하고 결제를 받습니다.",
           "details": "판매자용 POS 단말기입니다. 암호화폐 또는 같은 가치의 법정 화폐로 금액을 입력하고, 고객에게 요구할 자격증명을 선택하십시오. 고객은 선택한 네트워크에서 내 지갑으로 결제하고, 검증에 필요한 자격증명을 함께 보냅니다.",
           "statusLabel": "정식"
         },
         "it": {
+          "title": "Punto vendita",
           "summary": "Verifica un cliente e accetta pagamenti.",
           "details": "Un terminale di punto vendita per esercenti. Inserisci un importo in criptovaluta o l'equivalente in valuta fiat e seleziona quali credenziali del cliente sono richieste. I clienti pagano al tuo wallet sulla rete che scegli e allo stesso tempo inviano le credenziali richieste per la verifica.",
           "statusLabel": "Stabile"
         },
         "nl": {
+          "title": "Kassa",
           "summary": "Een klant verifiëren en betalingen accepteren.",
           "details": "Een kassaterminal voor verkopers. Voer een bedrag in cryptovaluta of de tegenwaarde in fiatvaluta in en kies welke bewijzen van de klant vereist zijn. Klanten betalen naar je wallet op het netwerk dat je kiest en sturen tegelijk de vereiste bewijzen mee voor verificatie.",
           "statusLabel": "Stabiel"
         },
         "tr": {
+          "title": "Satış Noktası",
           "summary": "Müşteriyi doğrulayın ve ödeme alın.",
           "details": "Satıcı için bir satış noktası terminali. Kripto para birimi veya karşılığı fiat para birimi cinsinden bir miktar girin ve hangi müşteri kimlik bilgilerinin gerektiğini seçin. Müşteriler seçtiğiniz ağ üzerinden cüzdanınıza ödeme yapar ve aynı anda doğrulama için gereken kimlik bilgilerini gönderir.",
           "statusLabel": "Kararlı"
         },
         "sw": {
+          "title": "Kituo cha Mauzo",
           "summary": "Hakiki mteja na upokee malipo.",
           "details": "Kituo cha mauzo cha mfanyabiashara. Andika kiasi kwa sarafu-fiche au sarafu ya fiat inayolingana, kisha chagua hati zipi za mteja zinahitajika. Wateja hulipa kwenye pochi yako kwenye mtandao unaouchagua, na wakati huo huo hutuma hati zinazohitajika ili kuhakikiwa.",
           "statusLabel": "Thabiti"
@@ -155,26 +180,31 @@
           "details": "Taajirih muqaamala terminaal. Gide dijitaal maalu hinnay kaa celta qumla luk kutub, kaadu zabuunuk maca sumaqitte waajib kinnim door. Zabuunitte atu doorta netwerk amol ku waletil dafaqan, kaadu woo waqdil cakkumusuh waajib sumaqitte rubaanah."
         },
         "am": {
+          "title": "የሽያጭ ነጥብ",
           "summary": "ደንበኛን ያረጋግጡ እና ክፍያ ይቀበሉ።",
           "details": "የነጋዴ የሽያጭ ነጥብ ተርሚናል። መጠኑን በክሪፕቶከረንሲ ወይም በተመጣጣኝ ምንዛሬ ያስገቡ እና የትኞቹ የደንበኛ ክሬደንሻሎች እንደሚያስፈልጉ ይምረጡ። ደንበኞች እርስዎ በሚመርጡት ኔትወርክ ላይ ወደ ቦርሳዎ ይከፍላሉ፣ በተመሳሳይ ጊዜም ለማረጋገጫ የሚያስፈልጉትን ክሬደንሻሎች ይልካሉ።",
           "statusLabel": "ቋሚ"
         },
         "om": {
+          "title": "Bakka Gurgurtaa",
           "summary": "Maamila mirkaneessii kaffaltii fudhadhu.",
           "details": "Terminaala iddoo gurgurtaa daldalaa. Hanga qarshii kiriiptoodhaan yookaan maallaqa walqixaatiin galchi, waabiiwwan maamilaa kamtu barbaachisu filadhu. Maamiltoonni toora ati filatte irratti gara waaleetii keetiitti kaffalu, yeroma sanatti immoo waabiiwwan mirkaneessuuf barbaachisan ni ergu.",
           "statusLabel": "Tasgabbaa'aa"
         },
         "so": {
+          "title": "Goobta Iibka",
           "summary": "Macmiilka xaqiiji oo lacag qaado.",
           "details": "Terminaal iibka ah oo ganacsade. Geli qadar lacag kripto ah ama lacag dowladeed u dhiganta, kadibna dooro shahaadooyinka macmiilka ee loo baahan yahay. Macmiiladu waxay lacagta ugu bixiyaan boorsadaada shabakadda aad dooratay, isla markaana waxay diraan shahaadooyinka loo baahan yahay ee xaqiijinta.",
           "statusLabel": "Xasilloon"
         },
         "ti": {
+          "title": "ነጥቢ መሸጣ",
           "summary": "ዓሚል ኣረጋግጽ ከምኡ'ውን ክፍሊት ተቐበል.",
           "details": "ናይ ነጋዳይ መሸጢ ተርሚናል. መጠን ብክሪፕቶ ባጤራ ወይ ብተመጣጣኒ ባጤራ ጽሓፍ, ከምኡ'ውን ኣየኖት ክረደንሻላት ዓሚል ከም ዘድልዩ ምረጽ. ዓማዊል ኣብቲ ንስኻ እትመርጾ መርበብ ናብ ዋሌትካ ይኸፍሉ, ኣብ ሓደ እዋን ከኣ ንምርግጋጽ ዘድልዩ ክረደንሻላት ይሰዱ.",
           "statusLabel": "ስሪት Stable"
         },
         "vi": {
+          "title": "Điểm bán hàng",
           "summary": "Xác minh khách hàng và nhận thanh toán.",
           "details": "Một máy POS dành cho người bán. Nhập số tiền bằng tiền mã hóa hoặc tiền fiat tương đương và chọn những chứng chỉ nào của khách hàng là bắt buộc. Khách hàng thanh toán vào ví của bạn trên mạng bạn chọn, đồng thời gửi các chứng chỉ cần thiết để xác minh.",
           "statusLabel": "Ổn định"
@@ -236,7 +266,8 @@
         },
         "hi": {
           "summary": "क्रेडेंशियल-गेटेड Uniswap v4 पूल में स्वैप करें।",
-          "details": "एक Uniswap v4 पूल में रिटेल स्वैप, जो केवल सत्यापित, गैर-प्रतिबंधित इंसानों को ही प्रवेश देता है। अपने पासपोर्ट क्रेडेंशियल से एक बार साबित करें कि आप इंसान हैं, और आपका पोर्टेबल ऑन-चेन क्रेडेंशियल (ONCHAINID) पूल को अनलॉक कर देता है। पूल जारीकर्ता रजिस्ट्री से मिलते हैं (या मैन्युअल रूप से दर्ज किए जाते हैं), टोकन का विवरण ऑन-चेन पढ़ा जाता है, और हर स्वैप उसकी दर, शुल्क स्तर और न्यूनतम प्राप्ति दिखाता है। स्वैप उसी चेन पर निपटते हैं जिससे आप कनेक्ट हैं। पायलट पूल Base Sepolia पर एक मॉक AUD स्टेबलकॉइन (AUDD) को एक मॉक टोकनाइज़्ड AUD मनी-मार्केट फ़ंड (MMF) से बदलता है।"
+          "details": "एक Uniswap v4 पूल में रिटेल स्वैप, जो केवल सत्यापित, गैर-प्रतिबंधित इंसानों को ही प्रवेश देता है। अपने पासपोर्ट क्रेडेंशियल से एक बार साबित करें कि आप इंसान हैं, और आपका पोर्टेबल ऑन-चेन क्रेडेंशियल (ONCHAINID) पूल को अनलॉक कर देता है। पूल जारीकर्ता रजिस्ट्री से मिलते हैं (या मैन्युअल रूप से दर्ज किए जाते हैं), टोकन का विवरण ऑन-चेन पढ़ा जाता है, और हर स्वैप उसकी दर, शुल्क स्तर और न्यूनतम प्राप्ति दिखाता है। स्वैप उसी चेन पर निपटते हैं जिससे आप कनेक्ट हैं। पायलट पूल Base Sepolia पर एक मॉक AUD स्टेबलकॉइन (AUDD) को एक मॉक टोकनाइज़्ड AUD मनी-मार्केट फ़ंड (MMF) से बदलता है।",
+          "statusLabel": "स्थिर"
         },
         "fil": {
           "summary": "Mag-swap sa isang credential-gated na Uniswap v4 pool.",
