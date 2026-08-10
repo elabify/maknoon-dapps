@@ -15,7 +15,7 @@
       "curatedBy": "Elabify",
       "version": "0.1.6",
       "channel": "stable",
-      "requiresMaknoonVersion": "0.6.3",
+      "requiresMaknoonVersion": "0.7.0",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/releases/0.1.6/manifest.json",
       "manifestSha256": "fd612d461626298d62d506a9ff8d95f44059cb6d984ddbe5b1edea0936c13af0",
       "permissions": [
@@ -191,7 +191,7 @@
       "curatedBy": "Elabify",
       "version": "0.1.8",
       "channel": "beta",
-      "requiresMaknoonVersion": "0.6.3",
+      "requiresMaknoonVersion": "0.7.0",
       "manifestURL": "https://elabify.github.io/maknoon-dapps/apps/pos/releases/0.1.8/manifest.json",
       "manifestSha256": "fd1b579ab5f9eb66cb1797563974c01fbe9958071af30219b50fe841503449e8",
       "permissions": [

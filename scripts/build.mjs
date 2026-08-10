@@ -51,6 +51,22 @@ const CATALOG_PATH = join(ROOT, "catalog.json");
 // distinct manifests inside the single folder. The loop matches the catalog
 // entry by id + version.
 const APP_META = {
+  // requiresMaknoon is 0.7.0 for BOTH channels, and deliberately not the 0.6.3
+  // this app was first published under.
+  //
+  // POS exists to run window.maknoon.commerce.collectAndCharge, and on iOS that
+  // call failed on every host from 0.6.3 to 0.6.9: the 0.6.3 permission re-scope
+  // moved the receive-only handlers to the "wallet" grant and updated each
+  // handler's requiredPermission, but left MiniAppHostView's REGISTRATION gated
+  // on "payment", which POS never asks for. The handler was therefore never
+  // registered and every call came back "Unsupported namespace commerce". Fixed
+  // in 0.7.0.
+  //
+  // Android registered unconditionally and worked from 0.6.3, so this overstates
+  // the requirement there. requiresMaknoonVersion has no per-platform form, and
+  // between overstating on Android and letting an iPhone install an app that
+  // dead-ends at its only real action, blocking the install is the lesser harm.
+  // It is a HARD gate (DAppCompatibility.blocksInstall), not a warning.
   pos: {
     dir: "pos",
     entry: "index.html",
@@ -60,7 +76,7 @@ const APP_META = {
         // committed under releases/0.1.6 and is not rebuilt, so shipping a beta
         // cannot disturb it. Promote by adding a new stable channel entry.
         channel: "stable", version: "0.1.6", frozen: true,
-        requiresMaknoon: "0.6.3",
+        requiresMaknoon: "0.7.0",
         capabilities: [
           { name: "identity", reason: "Verify each customer has a sanctions screening with no match" },
           { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
@@ -68,7 +84,7 @@ const APP_META = {
       },
       {
         channel: "beta", version: "0.1.8",
-        requiresMaknoon: "0.6.3",
+        requiresMaknoon: "0.7.0",
         capabilities: [
           { name: "identity", reason: "Verify each customer has a sanctions screening with no match" },
           { name: "wallet", reason: "Read your receiving addresses across all networks, including assets and transaction history" },
